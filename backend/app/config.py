@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # Gemini API 키 (없어도 서버 기동 가능)
     gemini_api_key: str | None = None
     # CORS 허용 Origin 목록 (콤마 구분 문자열을 직접 파싱하도록 JSON 디코딩 비활성화)
-    allowed_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
+    allowed_origins: Annotated[list[str], NoDecode] = ["http://localhost:5180"]
 
     # 허용 Origin 파싱
     # 콤마로 구분된 문자열을 공백 없는 Origin 목록으로 바꾸는 함수

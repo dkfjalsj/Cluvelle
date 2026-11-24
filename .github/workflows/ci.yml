@@ -1,0 +1,73 @@
+# 워크플로 이름
+name: CI
+
+# 실행 조건: develop·main 브랜치 push, develop·main 대상 PR
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+# 권한: 저장소 내용 읽기만 허용
+permissions:
+  contents: read
+
+jobs:
+  # 백엔드 검사 (린트·서식·테스트)
+  backend:
+    runs-on: ubuntu-latest
+    # 모든 run 단계는 backend 폴더에서 실행
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      # 코드 체크아웃
+      - uses: actions/checkout@v7
+
+      # uv 설치 (Python 버전은 backend/.python-version을 uv가 읽어 결정)
+      - uses: astral-sh/setup-uv@v10.4.0
+
+      # 잠금 파일(uv.lock) 그대로 의존성 설치
+      - run: uv sync --locked
+
+      # Ruff 린트 검사
+      - run: uv run ruff check .
+
+      # Ruff 서식 검사
+      - run: uv run ruff format --check .
+
+      # 단위 테스트 실행
+      - run: uv run pytest
+
+  # 프론트엔드 검사 (린트·타입·서식·빌드)
+  frontend:
+    runs-on: ubuntu-latest
+    # 모든 run 단계는 frontend 폴더에서 실행
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      # 코드 체크아웃
+      - uses: actions/checkout@v7
+
+      # Node 24 설치 및 npm 캐시 사용
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # 잠금 파일(package-lock.json) 그대로 의존성 설치
+      - run: npm ci
+
+      # ESLint 검사
+      - run: npm run lint
+
+      # TypeScript 타입 검사
+      - run: npm run typecheck
+
+      # Prettier 서식 검사
+      - run: npm run format:check
+
+      # 프로덕션 빌드
+      - run: npm run build
