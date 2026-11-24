@@ -8,6 +8,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.runnables import Runnable, RunnableLambda
 from pydantic import BaseModel, Field, ValidationError
 
+from app.schemas.plan import InvestigationPlan
 from app.schemas.report import FinalReport
 
 # 수사 종료 응답 문구
@@ -77,6 +78,12 @@ class ScriptedChatModel(BaseChatModel):
     report_received: list[list[BaseMessage]] = Field(default_factory=list)
     # 지금까지 보고서 요청된 횟수
     report_call_count: int = 0
+    # 계획 각본 (계획 객체, 형식 오류를 일으킬 dict, 또는 예외)
+    plans: list[Any] = Field(default_factory=list)
+    # 계획 요청마다 받은 메시지 기록
+    plan_received: list[list[BaseMessage]] = Field(default_factory=list)
+    # 지금까지 계획 요청된 횟수
+    plan_call_count: int = 0
 
     # 모델 종류 이름
     # LangChain이 요구하는 모델 식별 문자열을 반환하는 함수
@@ -100,17 +107,25 @@ class ScriptedChatModel(BaseChatModel):
         include_raw: bool = False,
         **kwargs: Any,
     ) -> Runnable[Any, Any]:
-        # 보고서 요청 처리
-        # 받은 메시지를 기록하고 각본의 다음 항목을 구조화 출력 형식으로 돌려주는 함수
+        # 계획 스키마인지 여부 (계획과 보고서는 각본 목록을 따로 씀)
+        is_plan = schema is InvestigationPlan
+
+        # 구조화 출력 요청 처리
+        # 받은 메시지를 기록하고 스키마에 맞는 각본의 다음 항목을 구조화 출력 형식으로 돌려주는 함수
         def respond(messages: Any) -> Any:
-            # 받은 메시지 기록
-            self.report_received.append(list(messages))
-            # 각본이 끝났으면 오류
-            if self.report_call_count >= len(self.reports):
-                raise RuntimeError("보고서 각본을 모두 사용했습니다.")
-            # 다음 항목 선택 후 횟수 증가
-            item = self.reports[self.report_call_count]
-            self.report_call_count += 1
+            # 스키마별 기록·각본·횟수 선택 후 다음 항목 꺼내기
+            if is_plan:
+                self.plan_received.append(list(messages))
+                if self.plan_call_count >= len(self.plans):
+                    raise RuntimeError("계획 각본을 모두 사용했습니다.")
+                item = self.plans[self.plan_call_count]
+                self.plan_call_count += 1
+            else:
+                self.report_received.append(list(messages))
+                if self.report_call_count >= len(self.reports):
+                    raise RuntimeError("보고서 각본을 모두 사용했습니다.")
+                item = self.reports[self.report_call_count]
+                self.report_call_count += 1
             # 예외 항목이면 그대로 던짐
             if isinstance(item, Exception):
                 raise item

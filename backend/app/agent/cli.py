@@ -6,10 +6,11 @@ from collections.abc import Callable
 from langchain_core.language_models import BaseChatModel
 
 from app.agent.llm import MissingApiKeyError, create_chat_model
-from app.agent.prompts import PROMPT_VERSION
-from app.agent.runner import run_investigation
+from app.agent.prompts import FIXED_PROMPT_VERSION, PROMPT_VERSION
+from app.agent.runner import InvestigationMode, run_investigation
 from app.agent.state import HistoryEntry, InvestigationState
 from app.config import Settings
+from app.schemas.plan import InvestigationPlan
 from app.schemas.report import FinalReport
 from app.services.case_repository import (
     CaseNotFoundError,
@@ -19,6 +20,13 @@ from app.services.case_repository import (
 
 # 결론 종류 표기
 VERDICT_LABELS = {"accuse": "지목", "withhold": "판단 보류"}
+# 방식별 프롬프트 버전
+PROMPT_VERSIONS: dict[str, str] = {
+    "adaptive": PROMPT_VERSION,
+    "fixed": FIXED_PROMPT_VERSION,
+}
+# 사용법 안내
+USAGE = "사용법: uv run python -m app.agent.cli CASE-001 [--mode adaptive|fixed]"
 
 # 모델 생성 함수 형식 (설정 → 채팅 모델)
 ModelFactory = Callable[[Settings], BaseChatModel]
@@ -37,11 +45,12 @@ def main(
 ) -> int:
     # 명령줄 인자 (없으면 실제 명령줄 사용)
     args = sys.argv[1:] if argv is None else argv
-    # 사건 ID가 정확히 하나가 아니면 사용법 안내
-    if len(args) != 1:
-        print("사용법: uv run python -m app.agent.cli CASE-001")
+    # 사건 ID와 실행 방식 해석 (잘못되면 사용법 안내 후 종료)
+    parsed = parse_args(args)
+    if parsed is None:
+        print(USAGE)
         return EXIT_BAD_CASE
-    case_id = args[0]
+    case_id, mode = parsed
 
     # 사건 ID 확인 (형식 오류·없음이면 한 줄 오류 후 종료)
     repository = CaseRepository()
@@ -59,22 +68,82 @@ def main(
         print(f"오류: {error}")
         return EXIT_FAILED
 
-    # 머리말 출력
+    # 머리말 출력 (방식과 해당 프롬프트 버전)
     print(f"사건: {case.case_id}")
+    print(f"방식: {mode}")
     print(f"모델: {settings.gemini_model}")
-    print(f"프롬프트 버전: {PROMPT_VERSION}")
+    print(f"프롬프트 버전: {PROMPT_VERSIONS[mode]}")
     print(f"조사 예산: {case.tool_budget}회")
     print()
 
     # 수사 실행과 시간 측정
     started = time.perf_counter()
-    state = run_investigation(case_id, llm, repository)
+    state = run_investigation(case_id, llm, mode=mode, repository=repository)
     elapsed = time.perf_counter() - started
 
+    # 고정 계획형이면 조사 계획 먼저 출력
+    plan = state["plan"]
+    if plan is not None:
+        print(format_plan(plan))
+        print()
     # 결과 출력
     print_report(state, case.tool_budget, elapsed)
     # 실패면 1, 그 외 0
     return EXIT_FAILED if state["status"] == "failed" else EXIT_OK
+
+
+# 명령줄 인자 해석
+# 사건 ID 하나와 선택 옵션 --mode를 읽어 (사건 ID, 방식)을 반환하는 함수 (잘못되면 None)
+def parse_args(args: list[str]) -> tuple[str, InvestigationMode] | None:
+    # 위치 인자와 방식 기본값
+    positional: list[str] = []
+    mode_value = "adaptive"
+    index = 0
+    # 인자를 앞에서부터 해석
+    while index < len(args):
+        token = args[index]
+        if token == "--mode":
+            # 다음 인자가 방식 값
+            if index + 1 >= len(args):
+                return None
+            mode_value = args[index + 1]
+            index += 2
+            continue
+        if token.startswith("--mode="):
+            # 등호 뒤가 방식 값
+            mode_value = token.split("=", 1)[1]
+        elif token.startswith("--"):
+            # 알 수 없는 옵션
+            return None
+        else:
+            # 위치 인자 (사건 ID)
+            positional.append(token)
+        index += 1
+    # 사건 ID가 정확히 하나이고 방식 값이 올바라야 함
+    if len(positional) != 1:
+        return None
+    if mode_value == "adaptive":
+        return positional[0], "adaptive"
+    if mode_value == "fixed":
+        return positional[0], "fixed"
+    return None
+
+
+# 조사 계획 블록 생성
+# 고정 계획형의 계획 단계(번호·도구·인자·이유)와 전체 의도를 여러 줄 문자열로 만드는 함수
+def format_plan(plan: InvestigationPlan) -> str:
+    # 제목 줄
+    lines = ["=== 조사 계획 ==="]
+    # 단계마다 한 줄 + 이유 한 줄
+    for number, step in enumerate(plan.steps, start=1):
+        step_args = step.model_dump(exclude={"tool", "reason"}, exclude_none=True)
+        args_text = json.dumps(step_args, ensure_ascii=False)
+        lines.append(f"{number}. {step.tool} {args_text}")
+        lines.append(f"   사유: {step.reason}")
+    # 전체 의도
+    lines.append(f"계획 의도: {plan.rationale}")
+    # 줄바꿈으로 합쳐 반환
+    return "\n".join(lines)
 
 
 # 결과 출력

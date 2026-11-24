@@ -3,6 +3,7 @@ from typing import Annotated, Any, Literal, TypedDict
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
+from app.schemas.plan import InvestigationPlan
 from app.schemas.report import FinalReport
 
 # 보고서 오류 종류
@@ -72,7 +73,13 @@ class InvestigationState(TypedDict):
     # 진행 상태
     status: Literal["pending", "running", "completed", "inconclusive", "failed"]
     # 수사 종료 사유
-    stop_reason: Literal["finished", "budget_exhausted", "llm_error"] | None
+    stop_reason: (
+        Literal["finished", "budget_exhausted", "llm_error", "plan_error"] | None
+    )
+    # 고정 계획형 조사 계획 (적응형은 None)
+    plan: InvestigationPlan | None
+    # 검증 대기 보고서
+    pending_report: FinalReport | None
     # 최종 보고서 (검증 통과 또는 강제 판단 보류 후 저장)
     final_report: FinalReport | None
     # 보고서 처리 결과
