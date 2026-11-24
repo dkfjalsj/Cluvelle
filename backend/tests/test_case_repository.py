@@ -150,3 +150,24 @@ def test_rejects_unknown_field(raw_case: dict[str, Any]) -> None:
     # 검증 실패 확인
     with pytest.raises(ValidationError):
         CaseFile.model_validate(raw_case)
+
+
+# off_site 표기 누락 테스트
+# off_site_label이 없으면 검증에 실패하는지 확인하는 함수
+def test_rejects_missing_off_site_label(raw_case: dict[str, Any]) -> None:
+    # off_site_label 필드 삭제
+    del raw_case["off_site_label"]
+    # 검증 실패 확인
+    with pytest.raises(ValidationError):
+        CaseFile.model_validate(raw_case)
+
+
+# off_site 표기 빈 값 테스트
+# off_site_label이 빈 문자열이거나 공백만 있으면 검증에 실패하는지 확인하는 함수
+@pytest.mark.parametrize("label", ["", "   "])
+def test_rejects_blank_off_site_label(raw_case: dict[str, Any], label: str) -> None:
+    # off_site_label을 빈 값으로 변경
+    raw_case["off_site_label"] = label
+    # 검증 실패 확인
+    with pytest.raises(ValidationError):
+        CaseFile.model_validate(raw_case)

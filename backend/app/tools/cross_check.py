@@ -10,14 +10,11 @@ MAX_EVIDENCE_COUNT = 5
 KIND_LABELS = {"claim": "진술", "record": "기록"}
 # 신원 미상 인물 표기
 UNIDENTIFIED_LABEL = "신원 미상"
-# 사건 밖 장소 표기
-OFF_SITE_LABEL = "연구동 밖"
 
 # 관계 종류별 끝부분 문구 (사실만 표현)
 RELATION_PHRASES: dict[RelationType, str] = {
     "same_person_overlap_different_place": "같은 인물, 시간대 겹침, 장소 다름",
     "same_person_overlap_same_place": "같은 인물, 시간대 겹침, 장소 같음",
-    "same_person_no_overlap": "같은 인물, 시간대 겹치지 않음",
     "different_people_same_place_overlap": "서로 다른 인물, 시간대 겹침, 장소 같음",
     "unidentified_time_overlap": "신원 미상 기록 포함, 시간대 겹침",
 }
@@ -51,11 +48,21 @@ def cross_check_evidence(case: CaseFile, evidence_ids: list[str]) -> CrossCheckR
                     if relation_type is None:
                         continue
                     # 사실만 담은 설명 문장 생성
-                    detail = (
-                        f"{_describe(first.id, fact_a, suspect_names, location_names)}"
-                        f" / {_describe(second.id, fact_b, suspect_names, location_names)}"
-                        f" → {RELATION_PHRASES[relation_type]}"
+                    first_text = _describe(
+                        first.id,
+                        fact_a,
+                        suspect_names,
+                        location_names,
+                        case.off_site_label,
                     )
+                    second_text = _describe(
+                        second.id,
+                        fact_b,
+                        suspect_names,
+                        location_names,
+                        case.off_site_label,
+                    )
+                    detail = f"{first_text} / {second_text} → {RELATION_PHRASES[relation_type]}"
                     # 관계 객체 생성
                     relation = FactRelation(
                         type=relation_type,
@@ -124,9 +131,9 @@ def _classify(fact_a: Fact, fact_b: Fact) -> RelationType | None:
         and fact_b.person_id is not None
         and fact_a.person_id == fact_b.person_id
     ):
-        # 겹치지 않으면 시간 불일치 관계
+        # 겹치지 않으면 관계 없음
         if not overlap:
-            return "same_person_no_overlap"
+            return None
         # 겹치면 장소 같음/다름으로 구분
         if fact_a.place == fact_b.place:
             return "same_person_overlap_same_place"
@@ -175,6 +182,7 @@ def _describe(
     fact: Fact,
     suspect_names: dict[str, str],
     location_names: dict[str, str],
+    off_site_label: str,
 ) -> str:
     # 종류 표기 (진술/기록)
     kind = KIND_LABELS[fact.kind]
@@ -183,9 +191,9 @@ def _describe(
         person = UNIDENTIFIED_LABEL
     else:
         person = f"{fact.person_id}({suspect_names[fact.person_id]})"
-    # 장소 표기 (사건 밖이면 고정 문구)
+    # 장소 표기 (사건 밖이면 사건 파일에 정한 표기)
     if fact.place == OFF_SITE_PLACE:
-        place = OFF_SITE_LABEL
+        place = off_site_label
     else:
         place = f"{fact.place}({location_names[fact.place]})"
     # 형식에 맞춰 조합

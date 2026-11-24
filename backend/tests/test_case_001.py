@@ -85,6 +85,7 @@ def locator_to_combo_key(tool: str, locator: EvidenceLocator) -> ComboKey:
 def test_case_and_answer_load(case: CaseFile, answer: AnswerKey) -> None:
     # 기본 정보 확인
     assert case.case_id == CASE_ID
+    assert case.off_site_label == "연구동 밖"
     assert answer.culprit_id == "S3"
     # 대조 검증이 예외 없이 통과해야 함
     validate_answer_against_case(answer, case)

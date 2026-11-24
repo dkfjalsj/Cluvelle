@@ -8,7 +8,6 @@ from app.schemas.case import EvidenceSourceTool, ToolName
 RelationType = Literal[
     "same_person_overlap_different_place",
     "same_person_overlap_same_place",
-    "same_person_no_overlap",
     "different_people_same_place_overlap",
     "unidentified_time_overlap",
 ]

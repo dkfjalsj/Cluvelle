@@ -192,8 +192,22 @@ class CaseFile(StrictModel):
     summary: str
     # 사건 도입부
     introduction: str
+    # 사건 밖 장소(off_site) 표기 문구 (공백만 있는 문자열 거부)
+    off_site_label: str
     # 조사 예산 (1~10, 기본 10)
     tool_budget: int = Field(default=10, ge=1, le=10)
+
+    # 사건 밖 장소 표기 검증
+    # off_site_label이 비어 있거나 공백만 있으면 오류를 내는 함수
+    @field_validator("off_site_label")
+    @classmethod
+    def validate_off_site_label(cls, value: str) -> str:
+        # 공백을 제거했을 때 비어 있으면 오류
+        if not value.strip():
+            raise ValueError("off_site_label은 비어 있거나 공백만 있을 수 없습니다.")
+        # 검증된 값 반환
+        return value
+
     # 용의자 목록
     suspects: list[Suspect]
     # 장소 목록
@@ -303,6 +317,8 @@ class PublicCase(StrictModel):
     summary: str
     # 사건 도입부
     introduction: str
+    # 사건 밖 장소(off_site) 표기 문구
+    off_site_label: str
     # 조사 예산
     tool_budget: int
     # 용의자 목록

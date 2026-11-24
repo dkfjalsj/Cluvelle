@@ -1,4 +1,5 @@
 from itertools import combinations
+from pathlib import Path
 
 import pytest
 
@@ -7,6 +8,8 @@ from app.schemas.tool import CrossCheckResult, FactRelation
 from app.services.case_repository import CaseRepository
 from app.tools import ToolArgumentError, cross_check_evidence
 
+# 테스트용 가짜 사건 폴더
+FIXTURE_CASES_DIR = Path(__file__).parent / "fixtures" / "cases"
 # 설명·안내 문구에 나오면 안 되는 단어
 FORBIDDEN_WORDS = (
     "거짓",
@@ -46,7 +49,8 @@ def relations_of(result: CrossCheckResult, relation_type: str) -> list[FactRelat
 def test_e9_e19_same_person_different_place(case: CaseFile) -> None:
     # 교차 검증 실행
     result = cross_check_evidence(case, ["E9", "E19"])
-    # 해당 관계가 정확히 1건
+    # 전체 관계가 정확히 1건이고 그 종류가 일치
+    assert len(result.relations) == 1
     matched = relations_of(result, "same_person_overlap_different_place")
     assert len(matched) == 1
     # 인물·증거·설명 확인
@@ -60,6 +64,8 @@ def test_e9_e19_same_person_different_place(case: CaseFile) -> None:
 def test_e9_e18_unidentified_overlap(case: CaseFile) -> None:
     # 교차 검증 실행
     result = cross_check_evidence(case, ["E9", "E18"])
+    # 전체 관계가 정확히 1건
+    assert len(result.relations) == 1
     # 같은 인물 관계는 없어야 함
     assert not [
         item for item in result.relations if item.type.startswith("same_person")
@@ -79,7 +85,8 @@ def test_e9_e18_unidentified_overlap(case: CaseFile) -> None:
 def test_e3_e16_same_person_different_place(case: CaseFile) -> None:
     # 교차 검증 실행
     result = cross_check_evidence(case, ["E3", "E16"])
-    # 해당 관계가 정확히 1건
+    # 전체 관계가 정확히 1건이고 그 종류가 일치
+    assert len(result.relations) == 1
     matched = relations_of(result, "same_person_overlap_different_place")
     assert len(matched) == 1
     # L1 21:05-21:09 진술과 L2 21:05-21:10 기록 사이 관계
@@ -93,7 +100,8 @@ def test_e3_e16_same_person_different_place(case: CaseFile) -> None:
 def test_e14_e21_same_person_same_place(case: CaseFile) -> None:
     # 교차 검증 실행
     result = cross_check_evidence(case, ["E14", "E21"])
-    # 해당 관계가 정확히 1건
+    # 전체 관계가 정확히 1건이고 그 종류가 일치
+    assert len(result.relations) == 1
     matched = relations_of(result, "same_person_overlap_same_place")
     assert len(matched) == 1
     # L6 21:20 기록끼리의 관계
@@ -128,20 +136,38 @@ def test_invalid_inputs(case: CaseFile, evidence_ids: list[str]) -> None:
         cross_check_evidence(case, evidence_ids)
 
 
-# 금지 단어 전수 테스트
-# 사실 관계가 있는 모든 증거 2개 조합의 설명·안내 문구에 금지 단어가 없는지 확인하는 함수
+# 금지 단어·삭제된 관계 전수 테스트
+# 사실 관계가 있는 모든 증거 2개 조합에서 금지 단어와 삭제된 관계 종류가 나오지 않는지 확인하는 함수
 def test_no_forbidden_words_in_any_pair(case: CaseFile) -> None:
     # 사실 관계가 있는 증거 ID 목록
     ids_with_facts = [item.id for item in case.evidence if item.facts]
     # 모든 2개 조합 검사
     for pair in combinations(ids_with_facts, 2):
         result = cross_check_evidence(case, list(pair))
+        # 삭제된 관계 종류(같은 인물, 시간 안 겹침)가 없어야 함
+        for relation in result.relations:
+            assert relation.type != "same_person_no_overlap", pair
         # 안내 문구와 모든 설명 문장 모으기
         texts = [result.message, *(item.detail for item in result.relations)]
         # 금지 단어가 하나도 없어야 함
         for text in texts:
             for word in FORBIDDEN_WORDS:
                 assert word not in text, (pair, word, text)
+
+
+# 사건별 off_site 표기 테스트
+# CASE-999의 off_site 사실이 들어간 관계에 그 사건의 표기 문구가 쓰이는지 확인하는 함수
+def test_off_site_label_from_case() -> None:
+    # 테스트용 가짜 사건 로드 (off_site_label: 현장 밖)
+    fake_case = CaseRepository(FIXTURE_CASES_DIR).load_case("CASE-999")
+    # S1의 현장 밖 진술(E2)과 창고 CCTV 기록(E3) 교차 검증
+    result = cross_check_evidence(fake_case, ["E2", "E3"])
+    # 관계가 1건 이상 있어야 함
+    assert result.relations
+    # 사건 표기는 나오고 CASE-001 표기는 나오지 않아야 함
+    detail = result.relations[0].detail
+    assert "현장 밖" in detail
+    assert "연구동 밖" not in detail
 
 
 # 결정성 테스트

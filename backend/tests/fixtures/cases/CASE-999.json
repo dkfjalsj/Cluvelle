@@ -5,6 +5,7 @@
   "difficulty": "intro",
   "summary": "테스트용 창고에서 상자 하나가 사라졌다.",
   "introduction": "테스트용 가짜 사건이다. 저녁 시간 창고에서 상자가 없어졌다.",
+  "off_site_label": "현장 밖",
   "tool_budget": 10,
   "suspects": [
     { "id": "S1", "name": "가나다", "role": "창고 관리인", "description": "창고 열쇠를 가진 직원." },

@@ -20,6 +20,7 @@ EXPECTED_PUBLIC_FIELDS = {
     "difficulty",
     "summary",
     "introduction",
+    "off_site_label",
     "tool_budget",
     "suspects",
     "locations",
