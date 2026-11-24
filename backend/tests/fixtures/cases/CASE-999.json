@@ -1,0 +1,68 @@
+{
+  "case_id": "CASE-999",
+  "version": 1,
+  "title": "테스트 창고 상자 분실",
+  "difficulty": "intro",
+  "summary": "테스트용 창고에서 상자 하나가 사라졌다.",
+  "introduction": "테스트용 가짜 사건이다. 저녁 시간 창고에서 상자가 없어졌다.",
+  "tool_budget": 10,
+  "suspects": [
+    { "id": "S1", "name": "가나다", "role": "창고 관리인", "description": "창고 열쇠를 가진 직원." },
+    { "id": "S2", "name": "라마바", "role": "배송 기사", "description": "저녁에 물건을 실어 가는 기사." },
+    { "id": "S3", "name": "사아자", "role": "경비원", "description": "건물 입구를 지키는 경비원." }
+  ],
+  "locations": [
+    { "id": "L1", "name": "창고" },
+    { "id": "L2", "name": "건물 입구" }
+  ],
+  "cameras": [
+    { "id": "C1", "name": "창고 카메라", "location_id": "L1", "time_windows": ["20:00-21:00", "21:00-22:00"] }
+  ],
+  "topics": [
+    { "id": "T1", "name": "저녁 동선" },
+    { "id": "T2", "name": "상자 위치" }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_tool": "inspect_scene",
+      "locator": { "location_id": "L1" },
+      "summary": "선반 아래에 테이프 조각이 떨어져 있다.",
+      "facts": []
+    },
+    {
+      "id": "E2",
+      "source_tool": "interview_suspect",
+      "locator": { "suspect_id": "S1", "topic_id": "T1" },
+      "summary": "관리인은 저녁 내내 집에 있었다고 말한다.",
+      "facts": [
+        { "kind": "claim", "person_id": "S1", "place": "off_site", "start": "20:00", "end": "22:00" }
+      ]
+    },
+    {
+      "id": "E3",
+      "source_tool": "check_cctv",
+      "locator": { "camera_id": "C1", "time_window": "21:00-22:00" },
+      "summary": "관리인이 창고에 들어가는 모습이 찍혔다.",
+      "facts": [
+        { "kind": "record", "person_id": "S1", "place": "L1", "start": "21:10", "end": "21:20" }
+      ]
+    },
+    {
+      "id": "E4",
+      "source_tool": "verify_alibi",
+      "locator": { "suspect_id": "S2" },
+      "summary": "배송 기사의 출입 기록이 창고 근처에 남아 있다.",
+      "facts": [
+        { "kind": "record", "person_id": "S2", "place": "L2", "start": "20:30", "end": "20:40" }
+      ]
+    },
+    {
+      "id": "E5",
+      "source_tool": "inspect_scene",
+      "locator": { "location_id": "L2" },
+      "summary": "입구 바닥에 흙 발자국이 있다.",
+      "facts": []
+    }
+  ]
+}
