@@ -71,3 +71,86 @@ jobs:
 
       # 프로덕션 빌드
       - run: npm run build
+
+  # 배포 (main push에서 backend·frontend 검사가 모두 통과했을 때만 실행)
+  deploy:
+    # 두 검사 job이 성공해야 실행
+    needs: [backend, frontend]
+    # main 브랜치 push일 때만 실행 (develop push·PR은 건너뜀)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # 배포된 백엔드 공개 주소 (비밀 아님, 이곳에서만 정의)
+    env:
+      BACKEND_URL: https://cluvelle-api.onrender.com
+    steps:
+      # Secrets 확인: 비어 있는 Secret의 이름만 출력하고 실패 (값은 출력하지 않음)
+      - name: Check deploy secrets
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          # 누락 여부 플래그
+          missing=0
+          # Render hook 비어 있으면 이름만 출력
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "Missing secret: RENDER_DEPLOY_HOOK_URL"
+            missing=1
+          fi
+          # Vercel hook 비어 있으면 이름만 출력
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "Missing secret: VERCEL_DEPLOY_HOOK_URL"
+            missing=1
+          fi
+          # 하나라도 없으면 job 실패
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          # 모두 있으면 확인 완료 출력
+          echo "All deploy secrets are set."
+
+      # Render 배포 호출 (실패 시 job 실패, 응답 본문·URL은 출력하지 않음)
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          # deploy hook에 POST 요청 (-f: HTTP 오류 시 실패, -sS: 진행 표시 숨기고 오류만 표시)
+          curl -fsS -X POST -o /dev/null "$RENDER_DEPLOY_HOOK_URL"
+          # 호출 성공 출력
+          echo "Render deploy triggered."
+
+      # Vercel 배포 호출 (실패 시 job 실패, 응답 본문·URL은 출력하지 않음)
+      - name: Trigger Vercel deploy
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          # deploy hook에 POST 요청 (-f: HTTP 오류 시 실패, -sS: 진행 표시 숨기고 오류만 표시)
+          curl -fsS -X POST -o /dev/null "$VERCEL_DEPLOY_HOOK_URL"
+          # 호출 성공 출력
+          echo "Vercel deploy triggered."
+
+      # 백엔드 health 확인 (15초 간격, 요청당 60초 타임아웃, 최대 10분)
+      - name: Check backend health
+        run: |
+          # 기대하는 응답 본문
+          expected='{"status":"ok"}'
+          # 10분 뒤 마감 시각 (초 단위)
+          deadline=$(( $(date +%s) + 600 ))
+          # 시도 횟수
+          attempt=0
+          # 마감 시각 전까지 반복
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            attempt=$(( attempt + 1 ))
+            # health 요청 (실패해도 반복을 계속하도록 오류 무시)
+            body=$(curl -sS --max-time 60 "$BACKEND_URL/api/health" || true)
+            # 기대 응답이면 성공 종료
+            if [ "$body" = "$expected" ]; then
+              echo "Attempt $attempt: backend is healthy."
+              exit 0
+            fi
+            # 실패 결과 출력 후 15초 대기
+            echo "Attempt $attempt: not ready (response: ${body:-none})"
+            sleep 15
+          done
+          # 10분 안에 정상 응답이 없으면 job 실패
+          echo "Backend health check failed within 10 minutes."
+          exit 1
