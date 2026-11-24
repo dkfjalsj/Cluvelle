@@ -105,9 +105,28 @@ def get_llm_tools() -> list[dict[str, Any]]:
                 "function": {
                     "name": name,
                     "description": TOOL_DESCRIPTIONS[name],
-                    "parameters": model.model_json_schema(),
+                    "parameters": _strip_additional_properties(
+                        model.model_json_schema()
+                    ),
                 },
             }
         )
     # 도구 정의 목록 반환
     return tools
+
+
+# additionalProperties 제거
+# JSON 스키마에서 Gemini가 지원하지 않는 additionalProperties 키를 중첩까지 모두 뺀 복사본을 반환하는 함수
+def _strip_additional_properties(schema: Any) -> Any:
+    # dict면 해당 키를 빼고 값도 재귀 처리
+    if isinstance(schema, dict):
+        return {
+            key: _strip_additional_properties(value)
+            for key, value in schema.items()
+            if key != "additionalProperties"
+        }
+    # list면 각 항목을 재귀 처리
+    if isinstance(schema, list):
+        return [_strip_additional_properties(item) for item in schema]
+    # 그 외 값은 그대로 반환
+    return schema

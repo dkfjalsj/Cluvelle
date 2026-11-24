@@ -3,6 +3,24 @@ from typing import Annotated, Any, Literal, TypedDict
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
+from app.schemas.report import FinalReport
+
+# 보고서 오류 종류
+ReportErrorKind = Literal[
+    "parse", "invalid_suspect", "uncollected_evidence", "missing_evidence"
+]
+
+
+# 보고서 오류
+# 최종 보고서 작성 시도 하나에서 발견된 오류의 시도 번호·종류·내용을 담는 클래스
+class ReportError(TypedDict):
+    # 보고서 작성 시도 번호 (1부터)
+    attempt: int
+    # 오류 종류
+    kind: ReportErrorKind
+    # 오류 내용
+    detail: str
+
 
 # 확보 증거
 # 수사 중 확보한 증거의 ID·출처·요약·확보 순번을 담는 클래스
@@ -53,9 +71,15 @@ class InvestigationState(TypedDict):
     tool_call_count: int
     # 진행 상태
     status: Literal["pending", "running", "completed", "inconclusive", "failed"]
-    # 종료 사유
+    # 수사 종료 사유
     stop_reason: Literal["finished", "budget_exhausted", "llm_error"] | None
-    # 마지막 결론 텍스트 (임시)
-    final_text: str | None
+    # 최종 보고서 (검증 통과 또는 강제 판단 보류 후 저장)
+    final_report: FinalReport | None
+    # 보고서 처리 결과
+    report_status: Literal["accepted", "forced_withhold"] | None
+    # 증거·용의자 인용 오류로 거절된 횟수
+    validation_rejections: int
+    # 보고서 오류 기록
+    report_errors: list[ReportError]
     # 오류 설명
     error: str | None

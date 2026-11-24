@@ -1,6 +1,9 @@
 import re
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
+
 from app.agent.prompts import build_case_brief
 from app.agent.tool_specs import TOOL_INPUT_MODELS, get_llm_tools
 from app.services.case_repository import CaseRepository
@@ -80,6 +83,50 @@ def test_llm_tools_schema() -> None:
         assert "case" not in parameters["properties"]
         # 설명은 한국어 문장
         assert tool["function"]["description"]
+
+
+# 키 이름 수집
+# 중첩된 dict·list를 돌며 등장하는 모든 키 이름을 모아 반환하는 함수
+def collect_keys(value: object) -> set[str]:
+    # 수집한 키 집합
+    keys: set[str] = set()
+    # dict면 키를 모으고 값도 재귀 탐색
+    if isinstance(value, dict):
+        for key, item in value.items():
+            keys.add(str(key))
+            keys |= collect_keys(item)
+    # list면 각 항목을 재귀 탐색
+    elif isinstance(value, list):
+        for item in value:
+            keys |= collect_keys(item)
+    # 수집 결과 반환
+    return keys
+
+
+# additionalProperties 제거 테스트
+# LLM 도구 스키마 어디에도 additionalProperties가 없는지 확인하는 함수
+def test_llm_tools_have_no_additional_properties() -> None:
+    # 모든 도구 명세의 키 수집
+    keys = collect_keys(get_llm_tools())
+    # additionalProperties가 없어야 함
+    assert "additionalProperties" not in keys
+
+
+# 입력 모델 엄격 검증 유지 테스트
+# 입력 모델이 여전히 알 수 없는 필드를 거부하는지 확인하는 함수
+def test_input_models_still_forbid_extra() -> None:
+    # 모델마다 올바른 인자를 만든 뒤 알 수 없는 필드만 더해 검증
+    for model in TOOL_INPUT_MODELS.values():
+        # 필수 필드를 채운 올바른 인자 (목록 필드는 증거 ID 목록)
+        valid_args: dict[str, object] = {
+            name: ["E1", "E2"] if name == "evidence_ids" else "값"
+            for name in model.model_fields
+        }
+        # 올바른 인자는 통과해야 함
+        model.model_validate(valid_args)
+        # 알 수 없는 필드가 더해지면 거부해야 함
+        with pytest.raises(ValidationError):
+            model.model_validate({**valid_args, "unknown_field": "값"})
 
 
 # 정답 모듈 미참조 테스트

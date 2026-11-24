@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     # 사용할 Gemini 모델 이름 (환경변수 GEMINI_MODEL)
     gemini_model: str = "gemini-3.8-flash"
+    # Gemini 요청 제한 시간(초) (환경변수 GEMINI_TIMEOUT_SECONDS)
+    gemini_timeout_seconds: float = 60.0
     # CORS 허용 Origin 목록 (콤마 구분 문자열을 직접 파싱하도록 JSON 디코딩 비활성화)
     allowed_origins: Annotated[list[str], NoDecode] = ["http://localhost:5180"]
 

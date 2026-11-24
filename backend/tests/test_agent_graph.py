@@ -2,7 +2,13 @@ from collections.abc import Callable
 from typing import Any
 
 import pytest
-from agent_fakes import ScriptedChatModel
+from agent_fakes import (
+    ScriptedChatModel,
+    accuse_report,
+    finish_message,
+    tool_call_message,
+    withhold_report,
+)
 from langchain_core.messages import AIMessage, ToolMessage
 from pydantic import BaseModel
 
@@ -12,26 +18,11 @@ from app.agent.state import InvestigationState
 
 # 검증 대상 사건 ID
 CASE_ID = "CASE-001"
-# 결론 메시지 문자열
-CONCLUSION_TEXT = "- 지목 용의자: S3\n- 근거 증거: E1, E9, E19\n- 설명: 테스트 결론\n- 미확인 사항: 없음"
-# 예산 소진 안내 문구
-BUDGET_MESSAGE = "조사 예산을 모두 사용했습니다. 더 이상 도구를 호출할 수 없습니다."
-
-
-# 도구 호출 메시지 생성
-# 도구 호출 하나를 담은 AIMessage를 만드는 함수
-def tool_call_message(name: str, args: dict[str, Any], call_id: str) -> AIMessage:
-    # 도구 호출 하나짜리 AIMessage 반환
-    return AIMessage(
-        content="", tool_calls=[{"name": name, "args": args, "id": call_id}]
-    )
-
-
-# 결론 메시지 생성
-# 도구 호출 없이 결론 텍스트만 담은 AIMessage를 만드는 함수
-def conclusion_message() -> AIMessage:
-    # 결론 텍스트 AIMessage 반환
-    return AIMessage(content=CONCLUSION_TEXT)
+# 예산 소진 안내 문구 (남은 예산 0 안내 포함)
+BUDGET_MESSAGE = (
+    "조사 예산을 모두 사용했습니다. 더 이상 도구를 호출할 수 없습니다.\n"
+    "남은 조사 예산: 0회"
+)
 
 
 # 도구 메시지 목록
@@ -82,9 +73,9 @@ def assert_tool_messages_linked(state: InvestigationState) -> None:
 
 
 # 정상 경로 테스트
-# 정답 경로 5개 도구 호출 뒤 결론을 내면 완료 상태와 확보 증거·기록이 맞는지 확인하는 함수
+# 정답 경로 5회 조사 뒤 지목 보고서를 내면 완료·통과 상태와 확보 증거·기록이 맞는지 확인하는 함수
 def test_solution_path_completes() -> None:
-    # 정답 경로 5개 도구 호출 + 결론
+    # 정답 경로 5개 도구 호출 + 수사 종료
     steps = [
         ("inspect_scene", {"location_id": "L1"}),
         ("inspect_scene", {"location_id": "L3"}),
@@ -98,13 +89,19 @@ def test_solution_path_completes() -> None:
         )
         for index, (name, args) in enumerate(steps, start=1)
     ]
-    responses.append(conclusion_message())
+    responses.append(finish_message())
+    # 지목 보고서 각본
+    report = accuse_report("S3", ["E1", "E9", "E19"])
+    model = ScriptedChatModel(responses=responses, reports=[report])
     # 수사 실행
-    state = run_investigation(CASE_ID, ScriptedChatModel(responses=responses))
+    state = run_investigation(CASE_ID, model)
     # 종료 상태 확인
     assert state["status"] == "completed"
     assert state["stop_reason"] == "finished"
+    assert state["report_status"] == "accepted"
+    assert state["validation_rejections"] == 0
     assert state["tool_call_count"] == 5
+    assert state["final_report"] == report
     # 확보 증거 확인
     assert {"E1", "E2", "E19", "E9"} <= set(state["collected_evidence"])
     # 조사 기록 5개와 각 이유 확인
@@ -114,18 +111,17 @@ def test_solution_path_completes() -> None:
         assert entry["step"] == index
         assert entry["reason"] == f"{index}번째 조사 이유"
         assert "reason" not in entry["args"]
-    # 결론 텍스트 확인
-    assert state["final_text"] == CONCLUSION_TEXT
+        assert entry["error"] is None
     # ToolMessage 연결 확인
     assert_tool_messages_linked(state)
 
 
 # 예산 종료 테스트
-# 같은 조사만 반복하는 모델이 예산 10회에서 멈추고 도구가 10번 넘게 실행되지 않는지 확인하는 함수
-def test_budget_exhausted(monkeypatch: pytest.MonkeyPatch) -> None:
+# 예산 10회를 다 쓰면 수사가 멈추고 보고서 노드가 실행되어 보고서가 남는지 확인하는 함수
+def test_budget_exhausted_still_reports(monkeypatch: pytest.MonkeyPatch) -> None:
     # 현장 조사 호출 횟수 측정
     calls = count_tool_calls(monkeypatch, "inspect_scene")
-    # 매번 같은 조사를 부르는 모델
+    # 매번 같은 조사를 부르는 모델 + 판단 보류 보고서
     model = ScriptedChatModel(
         responses=[
             tool_call_message(
@@ -133,26 +129,34 @@ def test_budget_exhausted(monkeypatch: pytest.MonkeyPatch) -> None:
             )
         ],
         repeat_last=True,
+        reports=[withhold_report()],
     )
     # 수사 실행
     state = run_investigation(CASE_ID, model)
-    # 정확히 10회에서 판단 보류로 종료
+    # 정확히 10회에서 수사 종료
     assert state["tool_call_count"] == 10
-    assert state["status"] == "inconclusive"
     assert state["stop_reason"] == "budget_exhausted"
-    # 도구 함수는 정확히 10번만 실행
-    assert calls[0] == 10
+    # 도구 함수는 10번을 넘지 않음 (반복 호출은 중복으로 차단)
+    assert calls[0] <= 10
+    # 보고서 노드가 실행되어 보고서가 남음
+    assert model.report_call_count == 1
+    assert state["final_report"] is not None
+    assert state["report_status"] == "accepted"
+    assert state["status"] == "inconclusive"
 
 
 # 한 턴 여러 호출 테스트
 # 예산이 1회 남았을 때 한 메시지의 도구 호출 3개 중 1개만 실행되는지 확인하는 함수
 def test_multiple_calls_in_one_turn() -> None:
-    # 9번의 단일 호출
+    # 9번의 서로 다른 단일 호출 (용의자×주제 조합)
+    combos = [(s, t) for s in ("S1", "S2", "S3") for t in ("T1", "T2", "T3")]
     responses = [
         tool_call_message(
-            "inspect_scene", {"location_id": "L2", "reason": "복도 확인"}, f"s{index}"
+            "interview_suspect",
+            {"suspect_id": s, "topic_id": t, "reason": "진술 확인"},
+            f"s{index}",
         )
-        for index in range(1, 10)
+        for index, (s, t) in enumerate(combos, start=1)
     ]
     # 한 메시지에 도구 호출 3개
     responses.append(
@@ -177,11 +181,12 @@ def test_multiple_calls_in_one_turn() -> None:
             ],
         )
     )
+    model = ScriptedChatModel(responses=responses, reports=[withhold_report()])
     # 수사 실행
-    state = run_investigation(CASE_ID, ScriptedChatModel(responses=responses))
+    state = run_investigation(CASE_ID, model)
     # 호출 횟수 10에서 종료
     assert state["tool_call_count"] == 10
-    assert state["status"] == "inconclusive"
+    assert state["stop_reason"] == "budget_exhausted"
     # 마지막 ToolMessage 3개: 1개 실행, 2개 예산 소진 안내
     last_three = tool_messages(state)[-3:]
     assert [item.tool_call_id for item in last_three] == ["m1", "m2", "m3"]
@@ -197,14 +202,14 @@ def test_multiple_calls_in_one_turn() -> None:
 # 잘못된 인자 테스트
 # 없는 장소를 부르면 인자 오류 메시지가 나오고 횟수가 차감된 뒤 다음 턴이 진행되는지 확인하는 함수
 def test_invalid_argument_continues() -> None:
-    # 잘못된 장소 호출 후 결론
+    # 잘못된 장소 호출 후 수사 종료
     responses = [
         tool_call_message(
             "inspect_scene", {"location_id": "L9", "reason": "없는 장소 확인"}, "bad"
         ),
-        conclusion_message(),
+        finish_message(),
     ]
-    model = ScriptedChatModel(responses=responses)
+    model = ScriptedChatModel(responses=responses, reports=[withhold_report()])
     # 수사 실행
     state = run_investigation(CASE_ID, model)
     # 인자 오류 메시지와 횟수 확인
@@ -213,24 +218,25 @@ def test_invalid_argument_continues() -> None:
     assert str(messages[0].content).startswith("도구 인자 오류:")
     assert state["tool_call_count"] == 1
     assert state["investigation_history"][0]["error"] is not None
-    # 다음 턴이 진행되어 결론까지 완료
+    # 다음 턴이 진행되어 보고서까지 작성
     assert model.call_count == 2
-    assert state["status"] == "completed"
+    assert state["report_status"] == "accepted"
 
 
 # reason 누락·공백 테스트
 # reason이 없거나 공백이면 입력 검증 실패 메시지가 나오고 횟수가 차감되는지 확인하는 함수
 def test_missing_or_blank_reason() -> None:
-    # reason 누락 호출, 공백 reason 호출, 결론
+    # reason 누락 호출, 공백 reason 호출, 수사 종료
     responses = [
         tool_call_message("inspect_scene", {"location_id": "L1"}, "no-reason"),
         tool_call_message(
             "inspect_scene", {"location_id": "L1", "reason": "   "}, "blank-reason"
         ),
-        conclusion_message(),
+        finish_message(),
     ]
+    model = ScriptedChatModel(responses=responses, reports=[withhold_report()])
     # 수사 실행
-    state = run_investigation(CASE_ID, ScriptedChatModel(responses=responses))
+    state = run_investigation(CASE_ID, model)
     # 두 호출 모두 인자 오류이고 reason 관련 원인 포함
     messages = tool_messages(state)
     assert len(messages) == 2
@@ -245,19 +251,19 @@ def test_missing_or_blank_reason() -> None:
 # 알 수 없는 도구 테스트
 # 없는 도구 이름을 부르면 인자 오류로 처리되고 횟수가 차감되는지 확인하는 함수
 def test_unknown_tool_name() -> None:
-    # 없는 도구 호출 후 결론
+    # 없는 도구 호출 후 수사 종료
     responses = [
         tool_call_message("teleport", {"reason": "순간 이동"}, "unknown"),
-        conclusion_message(),
+        finish_message(),
     ]
+    model = ScriptedChatModel(responses=responses, reports=[withhold_report()])
     # 수사 실행
-    state = run_investigation(CASE_ID, ScriptedChatModel(responses=responses))
+    state = run_investigation(CASE_ID, model)
     # 인자 오류 메시지와 횟수 확인
     messages = tool_messages(state)
     assert str(messages[0].content).startswith("도구 인자 오류:")
     assert "teleport" in str(messages[0].content)
     assert state["tool_call_count"] == 1
-    assert state["status"] == "completed"
 
 
 # LLM 예외 테스트
@@ -273,6 +279,7 @@ def test_llm_error_fails() -> None:
     assert state["error"] is not None
     assert "RuntimeError" in state["error"]
     assert state["tool_call_count"] == 0
+    assert state["final_report"] is None
 
 
 # LLM 오류 키 가림 테스트

@@ -31,3 +31,18 @@ def test_create_with_dummy_key() -> None:
     # Gemini 모델 객체이고 모델명이 설정값과 같은지 확인
     assert isinstance(model, ChatGoogleGenerativeAI)
     assert model.model == settings.gemini_model
+
+
+# 제한 시간 전달 테스트
+# 설정의 요청 제한 시간이 모델 객체에 전달되는지 확인하는 함수
+def test_timeout_passed_to_model() -> None:
+    # 제한 시간을 바꾼 설정
+    settings = Settings(
+        _env_file=None, gemini_api_key="dummy-test-key", gemini_timeout_seconds=12.5
+    )
+    # 모델 생성 (네트워크 호출 없음)
+    model = create_chat_model(settings)
+    # 제한 시간과 재시도 횟수 확인
+    assert isinstance(model, ChatGoogleGenerativeAI)
+    assert model.timeout == 12.5
+    assert model.max_retries == 2

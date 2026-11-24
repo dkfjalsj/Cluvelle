@@ -34,13 +34,16 @@ def run_investigation(
         "tool_call_count": 0,
         "status": "running",
         "stop_reason": None,
-        "final_text": None,
+        "final_report": None,
+        "report_status": None,
+        "validation_rejections": 0,
+        "report_errors": [],
         "error": None,
     }
     # 그래프 생성
     graph = build_investigation_graph(llm, case)
-    # 반복 한도: 예산 × 2(수사관·도구 실행) + 여유 5
-    recursion_limit = case.tool_budget * 2 + 5
+    # 반복 한도: 예산 × 2(수사관·도구 실행) + 마지막 수사관 1 + 보고서·검증 2회씩 4 + 여유 5
+    recursion_limit = case.tool_budget * 2 + 10
     # 그래프 실행 후 최종 상태 반환
     result = graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
     return cast(InvestigationState, result)

@@ -19,9 +19,10 @@ def create_chat_model(settings: Settings) -> BaseChatModel:
         raise MissingApiKeyError(
             "GEMINI_API_KEY가 설정되지 않았습니다. backend/.env를 확인하세요."
         )
-    # Gemini 채팅 모델 생성 (재시도 2회, 그 외 옵션은 기본값)
+    # Gemini 채팅 모델 생성 (재시도 2회, 요청 제한 시간 적용, 그 외 옵션은 기본값)
     return ChatGoogleGenerativeAI(
         model=settings.gemini_model,
         api_key=api_key,
         max_retries=2,
+        timeout=settings.gemini_timeout_seconds,
     )
