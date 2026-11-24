@@ -1,0 +1,499 @@
+{
+  "case_id": "CASE-001",
+  "version": 1,
+  "title": "연구실 시제품 도난",
+  "difficulty": "intro",
+  "summary": "시연 전날 밤, 연구실 보관함에서 촉각 센서 시제품이 사라졌다.",
+  "introduction": "한결대 지능로봇 연구실은 내일 오전 투자자 시연을 앞두고 있었다. 오늘 아침 08:30, 박사과정 강도윤이 보관함을 열었을 때 시제품 'HAPTIX-1'이 없었다. 보관함은 어젯밤 19:50에 잠긴 것이 마지막으로 확인되었다. 어젯밤 연구동에 남아 있던 사람은 세 명이다.",
+  "tool_budget": 10,
+  "suspects": [
+    {
+      "id": "S1",
+      "name": "강도윤",
+      "role": "박사과정 연구원",
+      "description": "시제품 개발 책임자. 어젯밤 늦게까지 시연 자료를 준비했다."
+    },
+    {
+      "id": "S2",
+      "name": "윤서진",
+      "role": "협력업체 엔지니어",
+      "description": "센서 보정을 위해 방문 출입증으로 연구실에 머물렀다."
+    },
+    {
+      "id": "S3",
+      "name": "정민혁",
+      "role": "연구실 매니저",
+      "description": "시설·장비·출입 관리를 맡고 있다."
+    }
+  ],
+  "locations": [
+    {
+      "id": "L1",
+      "name": "실험실 (보관함 있음)"
+    },
+    {
+      "id": "L2",
+      "name": "3층 복도"
+    },
+    {
+      "id": "L3",
+      "name": "자재 창고 (실험실과 내부 문으로 연결, 비상계단과 연결)"
+    },
+    {
+      "id": "L4",
+      "name": "휴게실"
+    },
+    {
+      "id": "L5",
+      "name": "주차장"
+    },
+    {
+      "id": "L6",
+      "name": "1층 로비"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "C1",
+      "name": "로비 정문 카메라",
+      "location_id": "L6",
+      "time_windows": [
+        "20:00-21:00",
+        "21:00-22:00",
+        "22:00-23:00"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "3층 복도 카메라 (실험실 정문·자재 창고 복도 쪽 문이 보임)",
+      "location_id": "L2",
+      "time_windows": [
+        "20:00-21:00",
+        "21:00-22:00",
+        "22:00-23:00"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "주차장 비상계단 출입구 카메라 (출입구 바로 위 근접 설치)",
+      "location_id": "L5",
+      "time_windows": [
+        "20:00-21:00",
+        "21:00-22:00",
+        "22:00-23:00"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "T1",
+      "name": "사건 당일 밤 동선"
+    },
+    {
+      "id": "T2",
+      "name": "시제품 보관 방식"
+    },
+    {
+      "id": "T3",
+      "name": "다른 사람에 대해"
+    },
+    {
+      "id": "T4",
+      "name": "출입카드 사용"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L1"
+      },
+      "summary": "보관함 자물쇠에 손상 없음(열쇠로 열린 것으로 보임). 보관함 안 자산 대장에 따르면 시제품은 회색 하드케이스(자산 태그 RL-0417)에 보관되어 있었고, 케이스째 사라졌다. 자재 창고로 통하는 내부 연결 문이 잠기지 않은 상태.",
+      "facts": []
+    },
+    {
+      "id": "E2",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L3"
+      },
+      "summary": "시제품 포장과 같은 정전기 방지 봉투의 찢긴 조각. 주차장으로 이어지는 비상계단 문 아래에 고임목이 끼워져 있음. 이 문에는 카드 리더가 없고 바깥에서는 열쇠로만 열 수 있음. 문 옆 순찰 일지에 \"21:00 비상계단 문 닫힘 확인\" 서명.",
+      "facts": []
+    },
+    {
+      "id": "E3",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T1"
+      },
+      "summary": "20:40부터 휴게실에서 자료 작업을 했고, 21:05에 충전기를 가지러 실험실에 잠깐 들렀다. 나오는 길에 자재 창고에 비품을 넣고 21:30에 퇴근했다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L4",
+          "start": "20:40",
+          "end": "21:05"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "21:05",
+          "end": "21:09"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L6",
+          "start": "21:30",
+          "end": "21:30"
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T2"
+      },
+      "summary": "보관함 열쇠는 나와 정민혁 매니저 둘만 가지고 있다. 19:50에 시제품을 케이스에 넣어 직접 잠갔다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "19:50",
+          "end": "19:50"
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T3"
+      },
+      "summary": "윤서진 씨가 꽤 늦게까지 실험실에 남아 있었다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "20:40",
+          "end": "21:05"
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      },
+      "summary": "21:15까지 실험실에서 센서 보정을 하고 21:20에 로비로 나갔다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "19:00",
+          "end": "21:15"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "21:20",
+          "end": "21:20"
+        }
+      ]
+    },
+    {
+      "id": "E7",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T2"
+      },
+      "summary": "보관함은 만진 적이 없고 열쇠도 없다.",
+      "facts": []
+    },
+    {
+      "id": "E8",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T3"
+      },
+      "summary": "정민혁 매니저가 요즘 돈 문제로 예민해 보였다.",
+      "facts": []
+    },
+    {
+      "id": "E9",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      },
+      "summary": "20:30쯤 퇴근해서 집에 갔고, 그 뒤로 연구동에 다시 오지 않았다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:28",
+          "end": "20:28"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "off_site",
+          "start": "20:40",
+          "end": "23:00"
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T2"
+      },
+      "summary": "마스터키는 내가 관리하고, 분실한 적 없다.",
+      "facts": []
+    },
+    {
+      "id": "E11",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T3"
+      },
+      "summary": "윤서진 씨가 경쟁사로 이직을 준비한다는 소문이 있다.",
+      "facts": []
+    },
+    {
+      "id": "E12",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T4"
+      },
+      "summary": "출입 기록을 보면 내가 20:28에 나간 게 그대로 나온다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:28",
+          "end": "20:28"
+        }
+      ]
+    },
+    {
+      "id": "E13",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:28 정민혁이 로비 게이트로 퇴장.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:28",
+          "end": "20:28"
+        }
+      ]
+    },
+    {
+      "id": "E14",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:20 윤서진이 큰 장비 가방을 메고 퇴장. 21:30 강도윤 퇴장.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "21:20",
+          "end": "21:20"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L6",
+          "start": "21:30",
+          "end": "21:30"
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:25 정민혁이 복도를 지나 엘리베이터로 이동.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "20:25",
+          "end": "20:25"
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:05 강도윤 실험실 입실, 21:09 퇴실(손에 충전기). 21:10 강도윤이 자재 창고 복도 쪽 문을 열었다 닫음(빈손). 이후 21:59까지 실험실 정문과 자재 창고 복도 쪽 문으로 출입한 사람 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "21:05",
+          "end": "21:10"
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:31 정민혁 명의로 등록된 차량 출차(주차 등록 정보 기준, 운전자 식별 불가).",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": null,
+          "place": "L5",
+          "start": "20:31",
+          "end": "20:31"
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:35 정민혁 명의로 등록된 차량이 들어와 비상계단 출입구 앞에 주차. 후드를 쓴 운전자가 비상계단 문을 열고 들어감(얼굴 식별 불가).",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": null,
+          "place": "L5",
+          "start": "21:35",
+          "end": "21:35"
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "22:00-23:00"
+      },
+      "summary": "22:03 비상계단 출입구에서 나온 인물이 카메라 바로 아래에서 후드를 벗음. 근접 화면으로 정민혁으로 식별됨. 들고 있던 회색 하드케이스 옆면의 자산 태그 RL-0417이 판독됨. 케이스를 같은 차량 트렁크에 실은 뒤 22:05 출차.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "22:03",
+          "end": "22:05"
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S1"
+      },
+      "summary": "09:10 로비 입장, 21:05 실험실 정문 카드 입실, 21:30 로비 퇴장.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "21:05",
+          "end": "21:05"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L6",
+          "start": "21:30",
+          "end": "21:30"
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S2"
+      },
+      "summary": "19:00 방문 등록(반입: 측정장비 가방 1), 21:20 방문 종료(반출: 측정장비 가방 1, 반입 내역과 일치).",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "19:00",
+          "end": "19:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "21:20",
+          "end": "21:20"
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S3"
+      },
+      "summary": "08:50 로비 입장, 20:28 로비 퇴장. 이후 카드 기록 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:28",
+          "end": "20:28"
+        }
+      ]
+    }
+  ]
+}
