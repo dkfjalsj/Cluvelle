@@ -44,6 +44,8 @@ PLAN_EXECUTOR_NODE = "plan_executor"
 MAX_PLAN_ATTEMPTS = 2
 # 도구 인자로 옮길 계획 단계 필드
 PLAN_ARG_FIELDS = ("location_id", "suspect_id", "topic_id", "camera_id", "time_window")
+# 없는 값으로 볼 문자열 (공백 제거·소문자 변환 후 비교)
+NULL_LIKE_VALUES = {"null", "none", ""}
 
 
 # 고정 계획형 그래프 생성
@@ -177,16 +179,26 @@ def build_fixed_graph(llm: BaseChatModel, case: CaseFile) -> CompiledStateGraph:
     return graph.compile()
 
 
+# 없는 값 판정
+# 계획 인자 값이 None이거나 공백 제거·대소문자 무시 후 "null"·"none"·빈 문자열이면 True를 반환하는 함수
+def _is_missing(value: str | None) -> bool:
+    # None이면 없는 값
+    if value is None:
+        return True
+    # 스키마 형식 때문에 생기는 null 표현이면 없는 값
+    return value.strip().lower() in NULL_LIKE_VALUES
+
+
 # 계획 단계 인자 변환
 # 계획 단계를 도구 인자로 바꾸고, source_steps가 잘못되었으면 인자 오류 문구를 함께 반환하는 함수
 def _step_to_args(
     step: PlannedStep, number: int, step_evidence: dict[int, list[str]]
 ) -> tuple[dict[str, Any], str | None]:
-    # None이 아닌 인자만 옮기고 reason 추가
+    # 값이 있는 인자만 옮기고 reason 추가 ("null"·"none"·빈 문자열은 없는 값으로 봄)
     args: dict[str, Any] = {
         field: getattr(step, field)
         for field in PLAN_ARG_FIELDS
-        if getattr(step, field) is not None
+        if not _is_missing(getattr(step, field))
     }
     args["reason"] = step.reason
     # 교차 검증이 아니면 그대로 반환 (source_steps는 도구 인자가 아님)

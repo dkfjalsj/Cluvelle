@@ -1,6 +1,7 @@
 import re
 from typing import Any, get_args
 
+import pytest
 from agent_fakes import (
     ScriptedChatModel,
     accuse_report,
@@ -189,6 +190,53 @@ def test_missing_required_argument() -> None:
     assert message.startswith("도구 인자 오류:")
     assert "location_id" in message
     assert state["tool_call_count"] == 1
+
+
+# null 표현 인자 제거 테스트
+# CCTV 단계의 location_id가 null 표현이면 인자에서 빠져 정상 실행되는지 확인하는 함수
+@pytest.mark.parametrize("value", ["null", "None", " NULL ", ""])
+def test_null_like_argument_removed(value: str) -> None:
+    # location_id에 null 표현이 들어간 CCTV 단계
+    plan = make_plan(
+        [
+            step(
+                "check_cctv",
+                location_id=value,
+                camera_id="C3",
+                time_window="22:00-23:00",
+            )
+        ]
+    )
+    state, _ = run_fixed([plan])
+    entry = state["investigation_history"][0]
+    # 정상 실행(예산 1회, 증거 반환)과 인자에서 location_id 제거 확인
+    assert state["tool_call_count"] == 1
+    assert entry["error"] is None
+    assert entry["evidence_ids"] == ["E19"]
+    assert "location_id" not in entry["args"]
+
+
+# 정상 값 인자 유지 테스트
+# CCTV 단계에 실제 장소 ID가 있으면 그대로 전달되어 입력 검증 오류가 나는지 확인하는 함수
+def test_real_value_argument_kept() -> None:
+    # location_id에 실제 값이 들어간 CCTV 단계
+    plan = make_plan(
+        [
+            step(
+                "check_cctv",
+                location_id="L1",
+                camera_id="C3",
+                time_window="22:00-23:00",
+            )
+        ]
+    )
+    state, _ = run_fixed([plan])
+    entry = state["investigation_history"][0]
+    # 값이 전달되어 extra 필드 입력 검증 오류
+    assert state["tool_call_count"] == 1
+    assert entry["args"]["location_id"] == "L1"
+    assert entry["error"] is not None
+    assert "location_id" in entry["error"]
 
 
 # 중복 단계 테스트

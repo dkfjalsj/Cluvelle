@@ -15,6 +15,16 @@ SYSTEM_PROMPT = """너는 가상 미스터리 사건을 수사하는 AI 탐정�
 7. 도구 결과 끝의 남은 조사 예산을 보고 계획을 조정한다."""
 
 
+# 이름과 설명 표기
+# 설명이 있으면 "이름 - 설명", 없으면 이름만 반환하는 함수
+def _with_description(name: str, description: str | None) -> str:
+    # 설명이 없으면 이름만
+    if description is None:
+        return name
+    # 설명이 있으면 이름 뒤에 붙임
+    return f"{name} - {description}"
+
+
 # 고정 계획형 프롬프트 버전
 FIXED_PROMPT_VERSION = "fixed-v1"
 
@@ -87,13 +97,16 @@ def build_case_brief(public_case: PublicCase) -> str:
     lines.append("")
     lines.append("장소:")
     for location in public_case.locations:
-        lines.append(f"- {location.id} {location.name}")
+        lines.append(
+            f"- {location.id} {_with_description(location.name, location.description)}"
+        )
     # 카메라 목록 (ID·이름·조회 가능 시간대)
     lines.append("")
     lines.append("카메라:")
     for camera in public_case.cameras:
         windows = ", ".join(camera.time_windows)
-        lines.append(f"- {camera.id} {camera.name} (조회 가능 시간대: {windows})")
+        label = _with_description(camera.name, camera.description)
+        lines.append(f"- {camera.id} {label} (조회 가능 시간대: {windows})")
     # 질문 주제 목록 (ID·이름)
     lines.append("")
     lines.append("질문 주제:")

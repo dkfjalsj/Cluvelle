@@ -91,7 +91,9 @@ def test_e3_e16_same_person_different_place(case: CaseFile) -> None:
     assert len(matched) == 1
     # L1 21:05-21:09 진술과 L2 21:05-21:10 기록 사이 관계
     assert matched[0].person_ids == ["S1"]
-    assert "L1(실험실 (보관함 있음)) 21:05-21:09" in matched[0].detail
+    assert "L1(실험실) 21:05-21:09" in matched[0].detail
+    # 장소 표기는 이름만 쓰여 괄호가 겹치지 않음
+    assert "(실험실 (" not in matched[0].detail
     assert "L2(3층 복도) 21:05-21:10" in matched[0].detail
 
 

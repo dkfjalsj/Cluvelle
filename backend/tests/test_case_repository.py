@@ -152,6 +152,20 @@ def test_rejects_unknown_field(raw_case: dict[str, Any]) -> None:
         CaseFile.model_validate(raw_case)
 
 
+# 장소·카메라 설명 빈 값 테스트
+# 장소·카메라 설명이 빈 문자열이거나 공백만 있으면 검증에 실패하는지 확인하는 함수
+@pytest.mark.parametrize("target", ["locations", "cameras"])
+@pytest.mark.parametrize("description", ["", "   "])
+def test_rejects_blank_description(
+    raw_case: dict[str, Any], target: str, description: str
+) -> None:
+    # 첫 장소 또는 첫 카메라에 빈 설명 넣기
+    raw_case[target][0]["description"] = description
+    # 검증 실패 확인
+    with pytest.raises(ValidationError):
+        CaseFile.model_validate(raw_case)
+
+
 # off_site 표기 누락 테스트
 # off_site_label이 없으면 검증에 실패하는지 확인하는 함수
 def test_rejects_missing_off_site_label(raw_case: dict[str, Any]) -> None:

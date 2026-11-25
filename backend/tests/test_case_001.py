@@ -86,6 +86,7 @@ def test_case_and_answer_load(case: CaseFile, answer: AnswerKey) -> None:
     # 기본 정보 확인
     assert case.case_id == CASE_ID
     assert case.off_site_label == "연구동 밖"
+    assert case.version == 2
     assert answer.culprit_id == "S3"
     # 대조 검증이 예외 없이 통과해야 함
     validate_answer_against_case(answer, case)
@@ -101,6 +102,36 @@ def test_case_counts(case: CaseFile) -> None:
     assert all(len(camera.time_windows) == 3 for camera in case.cameras)
     assert len(case.topics) == 4
     assert len(case.evidence) == 22
+
+
+# 장소·카메라 이름·설명 테스트
+# 설명이 분리된 장소 2개·카메라 2개의 이름·설명과, 설명이 없는 나머지 항목을 확인하는 함수
+def test_location_camera_descriptions(case: CaseFile) -> None:
+    # 장소·카메라 조회 표
+    locations = {location.id: location for location in case.locations}
+    cameras = {camera.id: camera for camera in case.cameras}
+    # 설명이 있는 장소
+    assert (locations["L1"].name, locations["L1"].description) == (
+        "실험실",
+        "보관함 있음",
+    )
+    assert (locations["L3"].name, locations["L3"].description) == (
+        "자재 창고",
+        "실험실과 내부 문으로 연결, 비상계단과 연결",
+    )
+    # 설명이 있는 카메라
+    assert (cameras["C2"].name, cameras["C2"].description) == (
+        "3층 복도 카메라",
+        "실험실 정문·자재 창고 복도 쪽 문이 보임",
+    )
+    assert (cameras["C3"].name, cameras["C3"].description) == (
+        "주차장 비상계단 출입구 카메라",
+        "출입구 바로 위 근접 설치",
+    )
+    # 나머지는 설명 없음
+    for location_id in ("L2", "L4", "L5", "L6"):
+        assert locations[location_id].description is None
+    assert cameras["C1"].description is None
 
 
 # 조사 조합 수 테스트

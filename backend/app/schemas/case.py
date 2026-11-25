@@ -75,6 +75,16 @@ class Location(StrictModel):
     id: str = Field(pattern=LOCATION_ID_PATTERN)
     # 장소 이름
     name: str
+    # 장소 설명 (없으면 None, 빈 문자열·공백만은 거부)
+    description: str | None = None
+
+    # 장소 설명 검증
+    # 설명이 빈 문자열이거나 공백만 있으면 오류를 내는 함수
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str | None) -> str | None:
+        # 공통 설명 검증 적용
+        return _validate_description(value)
 
 
 # 카메라
@@ -84,10 +94,20 @@ class Camera(StrictModel):
     id: str = Field(pattern=CAMERA_ID_PATTERN)
     # 카메라 이름
     name: str
+    # 카메라 설명 (없으면 None, 빈 문자열·공백만은 거부)
+    description: str | None = None
     # 카메라가 설치된 장소 ID
     location_id: str = Field(pattern=LOCATION_ID_PATTERN)
     # 조회 가능한 시간대 목록 (HH:MM-HH:MM)
     time_windows: list[str]
+
+    # 카메라 설명 검증
+    # 설명이 빈 문자열이거나 공백만 있으면 오류를 내는 함수
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str | None) -> str | None:
+        # 공통 설명 검증 적용
+        return _validate_description(value)
 
     # 시간대 목록 검증
     # 각 시간대의 형식과 시작<끝 순서, 목록 내 중복 여부를 확인하는 함수
@@ -349,6 +369,16 @@ class CaseSummary(StrictModel):
 def _matches(pattern: str, value: str) -> bool:
     # 전체 일치 여부 반환
     return re.fullmatch(pattern, value) is not None
+
+
+# 설명 문자열 검증
+# 설명이 None이면 그대로 두고, 빈 문자열이거나 공백만 있으면 오류를 내는 함수
+def _validate_description(value: str | None) -> str | None:
+    # 값이 있는데 공백 제거 후 비어 있으면 오류
+    if value is not None and not value.strip():
+        raise ValueError("description은 비어 있거나 공백만 있을 수 없습니다.")
+    # 검증된 값 반환
+    return value
 
 
 # ID 중복 검사

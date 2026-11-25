@@ -47,6 +47,14 @@ def test_brief_contains_public_info() -> None:
     # 예산과 off_site 안내 확인
     assert "조사 예산: 10회" in brief
     assert '사건 현장 밖 장소는 "연구동 밖"로 표기된다.' in brief
+    # 설명이 있는 장소·카메라는 "이름 - 설명"으로 표기
+    assert "- L1 실험실 - 보관함 있음" in brief
+    assert (
+        "- C3 주차장 비상계단 출입구 카메라 - 출입구 바로 위 근접 설치 (조회 가능 시간대:"
+        in brief
+    )
+    # 설명이 없는 장소는 이름만
+    assert "- L2 3층 복도\n" in brief
 
 
 # 브리핑 정답 미노출 테스트
