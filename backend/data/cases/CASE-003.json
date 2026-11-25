@@ -1,0 +1,574 @@
+{
+  "case_id": "CASE-003",
+  "version": 1,
+  "title": "호텔 객실 귀중품 도난",
+  "difficulty": "normal",
+  "summary": "외출한 투숙객의 객실 금고에서 다이아몬드 귀걸이가 사라졌다.",
+  "introduction": "라온호텔 1207호 투숙객 한유나는 오늘 13:00에 외출했다가 17:20에 돌아와, 객실 금고에 넣어 둔 다이아몬드 귀걸이가 사라진 것을 알았다. 금고 비밀번호는 한유나가 직접 정했다. 한유나는 체크인 때 객실 카드를 1장만 받았고, 외출 중에도 그 카드를 갖고 있었다. 오후 동안 1207호에 접근할 가능성이 있었던 사람은 세 명이다.",
+  "off_site_label": "호텔 밖",
+  "tool_budget": 10,
+  "suspects": [
+    {
+      "id": "S1",
+      "name": "장민서",
+      "role": "하우스키핑 직원",
+      "description": "12층 객실 청소 담당. 오늘 오후 1207호를 청소했다."
+    },
+    {
+      "id": "S2",
+      "name": "권도훈",
+      "role": "프런트 직원",
+      "description": "오늘 오후 프런트 근무. 체크인, 객실 카드와 금고 비상 개방 코드 발급을 맡는다."
+    },
+    {
+      "id": "S3",
+      "name": "배승현",
+      "role": "투숙객",
+      "description": "1207호 옆 1209호에 묵고 있다."
+    }
+  ],
+  "locations": [
+    {
+      "id": "L1",
+      "name": "1207호",
+      "description": "피해 객실, 금고 있음"
+    },
+    {
+      "id": "L2",
+      "name": "12층 복도",
+      "description": "엘리베이터 홀과 제빙기가 있음"
+    },
+    {
+      "id": "L3",
+      "name": "12층 린넨실",
+      "description": "직원용 엘리베이터 바로 앞"
+    },
+    {
+      "id": "L4",
+      "name": "프런트 데스크",
+      "description": "1층"
+    },
+    {
+      "id": "L5",
+      "name": "1층 로비"
+    },
+    {
+      "id": "L6",
+      "name": "하우스키핑 사무실",
+      "description": "지하 1층"
+    },
+    {
+      "id": "L7",
+      "name": "1209호",
+      "description": "배승현의 객실"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "C1",
+      "name": "로비 카메라",
+      "description": "프런트 데스크가 보임",
+      "location_id": "L5",
+      "time_windows": [
+        "13:00-14:00",
+        "14:00-15:00",
+        "15:00-16:00",
+        "16:00-17:00"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "12층 엘리베이터 홀 카메라",
+      "description": "1207~1209호 쪽 복도 끝은 보이지 않음",
+      "location_id": "L2",
+      "time_windows": [
+        "13:00-14:00",
+        "14:00-15:00",
+        "15:00-16:00",
+        "16:00-17:00"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "직원 엘리베이터 카메라",
+      "description": "엘리베이터 내부 근접 촬영",
+      "location_id": "L3",
+      "time_windows": [
+        "13:00-14:00",
+        "14:00-15:00",
+        "15:00-16:00",
+        "16:00-17:00"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "T1",
+      "name": "오후 동선"
+    },
+    {
+      "id": "T2",
+      "name": "객실 출입과 카드"
+    },
+    {
+      "id": "T3",
+      "name": "다른 사람에 대해"
+    },
+    {
+      "id": "T4",
+      "name": "업무 기록과 계정"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L1"
+      },
+      "summary": "도어락 기록: 14:02 하우스키핑 마스터카드 HK-03, 15:12 투숙객 카드 #2, 17:20 투숙객 카드 #1. 금고 기록: 15:14 1회용 비상 개방 코드로 열림. 금고와 문에 강제로 연 흔적 없음.",
+      "facts": []
+    },
+    {
+      "id": "E2",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L3"
+      },
+      "summary": "직원용 엘리베이터가 린넨실 바로 앞에 서고, 린넨실 옆 문으로 1207~1209호 쪽 복도 끝에 바로 나갈 수 있음. 이 구간은 엘리베이터 홀 카메라에 잡히지 않음. 린넨실 재고 단말은 사원증을 태그해야 입력됨.",
+      "facts": []
+    },
+    {
+      "id": "E3",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L4"
+      },
+      "summary": "프런트 단말 기록: 15:04 1207호 추가 카드(#2) 발급, 처리 계정 FD-07, 사유 '투숙객 분실 신고'(같은 시각 분실 신고 접수 기록 없음). 15:05 1207호 금고 1회용 비상 개방 코드 발급, 처리 계정 FD-07, 규정상 필요한 당직 매니저 승인자 칸이 비어 있음.",
+      "facts": []
+    },
+    {
+      "id": "E4",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L6"
+      },
+      "summary": "청소 일정표: 1207호는 14:00 청소, 담당 장민서. 15:00~16:00 장민서는 12층 린넨실 정리 배정. 객실 청소 중 금고를 열지 않는 것이 규정.",
+      "facts": []
+    },
+    {
+      "id": "E5",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T1"
+      },
+      "summary": "14:00부터 14:30까지 1207호를 청소했고, 15시부터 16시까지 12층 린넨실에서 수건을 정리했다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "14:00",
+          "end": "14:30"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:00",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T2"
+      },
+      "summary": "청소할 때는 마스터카드 HK-03을 쓴다. 금고는 건드리지 않는다.",
+      "facts": []
+    },
+    {
+      "id": "E7",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T3"
+      },
+      "summary": "옆방 1209호 손님이 오후에 복도를 여러 번 오갔다.",
+      "facts": []
+    },
+    {
+      "id": "E8",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T4"
+      },
+      "summary": "15:10쯤 린넨실 앞으로 프런트 유니폼을 입은 남자 직원이 객실 쪽으로 지나갔다. 얼굴은 제대로 못 봤다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": null,
+          "place": "L3",
+          "start": "15:10",
+          "end": "15:10"
+        }
+      ]
+    },
+    {
+      "id": "E9",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      },
+      "summary": "13시부터 17시까지 프런트를 떠난 적이 없다. 계속 체크인 손님을 받았다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "13:00",
+          "end": "17:00"
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T2"
+      },
+      "summary": "추가 카드와 금고 비상 개방 코드는 투숙객 본인 확인과 매니저 승인을 거친 뒤에만 발급한다.",
+      "facts": []
+    },
+    {
+      "id": "E11",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T3"
+      },
+      "summary": "1209호 손님이 1207호 쪽을 기웃거린다는 얘기를 들었다.",
+      "facts": []
+    },
+    {
+      "id": "E12",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T4"
+      },
+      "summary": "내 단말 계정은 FD-07이다. 오후에는 체크인 업무를 처리했다.",
+      "facts": []
+    },
+    {
+      "id": "E13",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      },
+      "summary": "오후 내내 1209호에 있었고, 15:20쯤 제빙기에 다녀왔다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "15:20",
+          "end": "15:25"
+        }
+      ]
+    },
+    {
+      "id": "E14",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T2"
+      },
+      "summary": "내 방 카드로는 1209호만 열린다.",
+      "facts": []
+    },
+    {
+      "id": "E15",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T3"
+      },
+      "summary": "15:10에서 15:15 사이쯤 옆방 1207호 문 여는 소리가 났고, 문틈으로 보니 청소 직원 같은 사람이 들어갔다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": null,
+          "place": "L1",
+          "start": "15:10",
+          "end": "15:15"
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "13:00-14:00"
+      },
+      "summary": "13:00 투숙객 한유나가 로비를 나감. 권도훈이 프런트에서 손님을 응대함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "13:00",
+          "end": "14:00"
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "14:00-15:00"
+      },
+      "summary": "권도훈이 프런트에서 계속 근무함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "14:00",
+          "end": "15:00"
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "15:00-16:00"
+      },
+      "summary": "15:04 권도훈이 카드 발급기를 조작해 나온 카드 한 장을 자기 주머니에 넣음(카드 번호는 보이지 않음). 15:06 프런트를 떠나 직원 통로로 들어감. 15:21 돌아와 근무를 이어 감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "15:00",
+          "end": "15:06"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "15:21",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "16:00-17:00"
+      },
+      "summary": "권도훈이 프런트에서 근무함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "16:00",
+          "end": "17:00"
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "14:00-15:00"
+      },
+      "summary": "14:00 장민서가 청소 카트를 끌고 복도 끝 쪽으로 감. 14:31 돌아와 엘리베이터에 탐.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "14:00",
+          "end": "14:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "14:31",
+          "end": "14:31"
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "15:00-16:00"
+      },
+      "summary": "15:20 배승현이 복도 끝 쪽에서 나와 엘리베이터 홀 제빙기를 이용함. 15:25 복도 끝 쪽으로 돌아감. 이 시간대에 홀을 지난 사람은 그 외에 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "15:20",
+          "end": "15:25"
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "14:00-15:00"
+      },
+      "summary": "14:58 장민서가 린넨 카트와 함께 12층에서 내림.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "14:58",
+          "end": "14:58"
+        }
+      ]
+    },
+    {
+      "id": "E23",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "15:00-16:00"
+      },
+      "summary": "15:07 권도훈이 1층에서 타서 15:08 12층에서 내림(근접 화면으로 얼굴 식별). 15:19 12층에서 타서 1층으로 내려감. 손에 작은 서류 봉투를 들고 있음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "15:08",
+          "end": "15:08"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "15:19",
+          "end": "15:19"
+        }
+      ]
+    },
+    {
+      "id": "E24",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S1"
+      },
+      "summary": "하우스키핑 단말 기록(HK-03): 14:02 1207호 청소 시작, 14:29 완료. 15:01~15:58 12층 린넨실 재고 단말 입력 23건(사원증 태그 필요). 15:09와 15:14에도 입력 기록이 있음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "14:02",
+          "end": "14:02"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "14:29",
+          "end": "14:29"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:01",
+          "end": "15:01"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:09",
+          "end": "15:09"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:14",
+          "end": "15:14"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:58",
+          "end": "15:58"
+        }
+      ]
+    },
+    {
+      "id": "E25",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S2"
+      },
+      "summary": "근무 기록(권도훈): 13:00~17:00 프런트 근무, 단말 계정 FD-07. 오후 휴식 기록 없음.",
+      "facts": []
+    },
+    {
+      "id": "E26",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S3"
+      },
+      "summary": "1209호 도어락 기록(안팎 개폐 모두 기록): 14:50 입실, 15:19 문 열림(나감), 15:26 입실. 그 사이 다른 개폐 기록 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L7",
+          "start": "14:50",
+          "end": "14:50"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L7",
+          "start": "15:19",
+          "end": "15:19"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L7",
+          "start": "15:26",
+          "end": "15:26"
+        }
+      ]
+    }
+  ]
+}

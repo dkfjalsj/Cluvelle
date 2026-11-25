@@ -1,0 +1,58 @@
+{
+  "case_id": "CASE-003",
+  "culprit_id": "S2",
+  "decisive_evidence_ids": [
+    "E1",
+    "E3",
+    "E23"
+  ],
+  "misleading_evidence_ids": [
+    "E15",
+    "E21"
+  ],
+  "solution_path": [
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L1"
+      }
+    },
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L4"
+      }
+    },
+    {
+      "tool": "check_cctv",
+      "args": {
+        "camera_id": "C1",
+        "time_window": "15:00-16:00"
+      }
+    },
+    {
+      "tool": "check_cctv",
+      "args": {
+        "camera_id": "C3",
+        "time_window": "15:00-16:00"
+      }
+    },
+    {
+      "tool": "interview_suspect",
+      "args": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      }
+    },
+    {
+      "tool": "cross_check_evidence",
+      "args": {
+        "evidence_ids": [
+          "E9",
+          "E23"
+        ]
+      }
+    }
+  ],
+  "grading_notes": "E15는 유니폼만 보고 청소 직원으로 짐작한 진술이고 시각도 15:10~15:15 사이로 불확실하다. E24(15:14 린넨실 단말 사원증 태그 입력)와 E1(15:12 사용 카드는 HK-03이 아닌 #2)로 해소된다. E21은 E13·E26(제빙기 이용, 1209호 도어락이 15:19 전 개폐 없음)으로 설명되고 E14와 함께 S3를 배제한다. E9와 E18을 교차 검증하면 장소 같음만 나오므로 15:06~15:21 공백은 E18의 문장을 읽어야 드러난다. E18의 카드 번호는 보이지 않으므로 E3의 15:04 발급 기록과 결합해야 카드 #2로 연결된다. 비상 개방 코드 발급은 S2의 업무 권한이지만 매니저 승인이 빠져 있다. FD-07이 S2의 계정이라는 정보는 E12·E25에 있다. 일반적 경로는 C2 15:00-16:00이나 verify_alibi(S2)를 먼저 조회하는 7~8회다."
+}
