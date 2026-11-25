@@ -1,0 +1,58 @@
+{
+  "case_id": "CASE-004",
+  "culprit_id": "S3",
+  "decisive_evidence_ids": [
+    "E2",
+    "E15",
+    "E18"
+  ],
+  "misleading_evidence_ids": [
+    "E1",
+    "E9"
+  ],
+  "solution_path": [
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L4"
+      }
+    },
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L1"
+      }
+    },
+    {
+      "tool": "check_cctv",
+      "args": {
+        "camera_id": "C1",
+        "time_window": "15:00-16:00"
+      }
+    },
+    {
+      "tool": "check_cctv",
+      "args": {
+        "camera_id": "C2",
+        "time_window": "15:00-16:00"
+      }
+    },
+    {
+      "tool": "interview_suspect",
+      "args": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      }
+    },
+    {
+      "tool": "cross_check_evidence",
+      "args": {
+        "evidence_ids": [
+          "E11",
+          "E18"
+        ]
+      }
+    }
+  ],
+  "grading_notes": "E1은 오해 유발 증거지만 해결 논리의 출발점이기도 하다. E1·E2의 계정 류지안은 13:06 로그인 후 잠기지 않은 세션이며(E1·E21·E5), 15:40 열람 시각에 류지안은 바에서 제조 중이었다(E15·E21의 15:45 입력). 따라서 계정 기록만으로 S1을 지목하면 부적절하다. E9·E13은 근거 없는 소문이다. E6(남궁현의 전 직장 퀵샷)은 동기일 뿐 증거가 아니다. S3의 사장실 출입과 출력물 취득은 E2(그 시간대 유일한 출력)·E18(트레이에서 종이를 집음)로 관측되지만, 출력물을 퀵샷에 전달한 과정은 관측되지 않았으므로 보고서는 이를 추론으로 구분해야 한다. E11과 E19를 교차 검증하면 장소 같음만 나오므로 15:37~15:48 공백은 E19의 문장을 읽어야 드러난다. E3(완료 서명 없음)과 E10(목격, 시각은 추정)은 보조 근거다. S2는 15:01~16:05 결제 기록(E22)과 E15로 배제된다. 일반적 경로는 E1을 믿고 S1을 먼저 조사하거나 C3를 먼저 조회하는 7~9회다."
+}
