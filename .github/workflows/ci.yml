@@ -36,6 +36,12 @@ jobs:
       # Ruff 서식 검사
       - run: uv run ruff format --check .
 
+      # 평가 스크립트 폴더 Ruff 린트 검사
+      - run: uv run ruff check ../evaluation
+
+      # 평가 스크립트 폴더 Ruff 서식 검사
+      - run: uv run ruff format --check ../evaluation
+
       # 단위 테스트 실행
       - run: uv run pytest
 
