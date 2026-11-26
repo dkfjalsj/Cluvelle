@@ -125,7 +125,13 @@ def test_budget_exhausted_still_reports(monkeypatch: pytest.MonkeyPatch) -> None
     model = ScriptedChatModel(
         responses=[
             tool_call_message(
-                "inspect_scene", {"location_id": "L2", "reason": "복도 확인"}, "repeat"
+                "inspect_scene",
+                {
+                    "location_id": "L2",
+                    "reason": "복도 확인",
+                    "hypothesis": "테스트 가설",
+                },
+                "repeat",
             )
         ],
         repeat_last=True,
@@ -153,7 +159,12 @@ def test_multiple_calls_in_one_turn() -> None:
     responses = [
         tool_call_message(
             "interview_suspect",
-            {"suspect_id": s, "topic_id": t, "reason": "진술 확인"},
+            {
+                "suspect_id": s,
+                "topic_id": t,
+                "reason": "진술 확인",
+                "hypothesis": "테스트 가설",
+            },
             f"s{index}",
         )
         for index, (s, t) in enumerate(combos, start=1)
@@ -165,17 +176,29 @@ def test_multiple_calls_in_one_turn() -> None:
             tool_calls=[
                 {
                     "name": "inspect_scene",
-                    "args": {"location_id": "L1", "reason": "실험실 확인"},
+                    "args": {
+                        "location_id": "L1",
+                        "reason": "실험실 확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "m1",
                 },
                 {
                     "name": "inspect_scene",
-                    "args": {"location_id": "L3", "reason": "창고 확인"},
+                    "args": {
+                        "location_id": "L3",
+                        "reason": "창고 확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "m2",
                 },
                 {
                     "name": "verify_alibi",
-                    "args": {"suspect_id": "S3", "reason": "출입 기록 확인"},
+                    "args": {
+                        "suspect_id": "S3",
+                        "reason": "출입 기록 확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "m3",
                 },
             ],
@@ -205,7 +228,13 @@ def test_invalid_argument_continues() -> None:
     # 잘못된 장소 호출 후 수사 종료
     responses = [
         tool_call_message(
-            "inspect_scene", {"location_id": "L9", "reason": "없는 장소 확인"}, "bad"
+            "inspect_scene",
+            {
+                "location_id": "L9",
+                "reason": "없는 장소 확인",
+                "hypothesis": "테스트 가설",
+            },
+            "bad",
         ),
         finish_message(),
     ]
@@ -230,7 +259,9 @@ def test_missing_or_blank_reason() -> None:
     responses = [
         tool_call_message("inspect_scene", {"location_id": "L1"}, "no-reason"),
         tool_call_message(
-            "inspect_scene", {"location_id": "L1", "reason": "   "}, "blank-reason"
+            "inspect_scene",
+            {"location_id": "L1", "reason": "   ", "hypothesis": "테스트 가설"},
+            "blank-reason",
         ),
         finish_message(),
     ]
@@ -253,7 +284,9 @@ def test_missing_or_blank_reason() -> None:
 def test_unknown_tool_name() -> None:
     # 없는 도구 호출 후 수사 종료
     responses = [
-        tool_call_message("teleport", {"reason": "순간 이동"}, "unknown"),
+        tool_call_message(
+            "teleport", {"reason": "순간 이동", "hypothesis": "테스트 가설"}, "unknown"
+        ),
         finish_message(),
     ]
     model = ScriptedChatModel(responses=responses, reports=[withhold_report()])

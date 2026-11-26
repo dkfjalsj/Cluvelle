@@ -6,7 +6,7 @@ from langchain_core.messages import ToolCall, ToolMessage
 from pydantic import BaseModel, ValidationError
 
 from app.agent.state import CollectedEvidence, HistoryEntry
-from app.agent.tool_specs import TOOL_INPUT_MODELS
+from app.agent.tool_specs import NON_TOOL_ARG_FIELDS, TOOL_INPUT_MODELS
 from app.schemas.case import CaseFile
 from app.schemas.tool import InvestigationResult
 from app.tools import (
@@ -26,6 +26,9 @@ TOOL_FUNCTIONS: dict[str, Callable[..., BaseModel]] = {
     "verify_alibi": verify_alibi,
     "cross_check_evidence": cross_check_evidence,
 }
+
+# 도구 이름 → 입력 모델 표 형식
+InputModels = dict[str, type[BaseModel]]
 
 # 예산 소진 안내 문구
 BUDGET_EXHAUSTED_MESSAGE = (
@@ -58,6 +61,7 @@ def handle_tool_call(
     collected: dict[str, CollectedEvidence],
     history: list[HistoryEntry],
     preset_error: str | None = None,
+    input_models: InputModels = TOOL_INPUT_MODELS,
 ) -> tuple[ToolMessage, int]:
     # 예산을 다 썼으면 실행·기록하지 않고 안내만 (차감 없음)
     if count >= case.tool_budget:
@@ -68,18 +72,20 @@ def handle_tool_call(
     # 미리 정해진 인자 오류가 있으면 실행하지 않고 오류로 처리
     if preset_error is not None:
         raw_args = dict(tool_call.get("args") or {})
-        reason = raw_args.get("reason")
-        record_args = {key: value for key, value in raw_args.items() if key != "reason"}
+        record_args, reason, hypothesis = split_call_args(raw_args)
         content, entry = argument_error(
             tool_call["name"],
             record_args,
-            reason if isinstance(reason, str) else None,
+            reason,
             count,
             preset_error,
+            hypothesis=hypothesis,
         )
     else:
         # 검증·중복·교차 검증 대상 확인 후 실행
-        content, entry = process_tool_call(case, tool_call, count, collected, history)
+        content, entry = process_tool_call(
+            case, tool_call, count, collected, history, input_models
+        )
     # 기록 추가
     history.append(entry)
     # 남은 예산 안내를 붙인 메시지와 횟수 반환
@@ -94,40 +100,49 @@ def process_tool_call(
     step: int,
     collected: dict[str, CollectedEvidence],
     history: list[HistoryEntry],
+    input_models: InputModels = TOOL_INPUT_MODELS,
 ) -> tuple[str, HistoryEntry]:
     # 도구 이름과 원본 인자
     name = tool_call["name"]
     raw_args = dict(tool_call.get("args") or {})
-    # 기록용 인자(reason 제외)와 이유
-    record_args = {key: value for key, value in raw_args.items() if key != "reason"}
-    raw_reason = raw_args.get("reason")
-    reason = raw_reason if isinstance(raw_reason, str) else None
+    # 기록용 인자(reason·hypothesis 제외)와 이유·가설
+    record_args, reason, hypothesis = split_call_args(raw_args)
 
     # 알 수 없는 도구 이름이면 인자 오류로 처리
-    input_model = TOOL_INPUT_MODELS.get(name)
+    input_model = input_models.get(name)
     tool_function = TOOL_FUNCTIONS.get(name)
     if input_model is None or tool_function is None:
         message = f"알 수 없는 도구입니다: {name}"
-        return argument_error(name, record_args, reason, step, message)
+        return argument_error(
+            name, record_args, reason, step, message, hypothesis=hypothesis
+        )
 
     # 입력 모델로 인자 검증
     try:
         validated = input_model.model_validate(raw_args)
     except ValidationError as error:
-        return argument_error(name, record_args, reason, step, summarize(error))
+        return argument_error(
+            name, record_args, reason, step, summarize(error), hypothesis=hypothesis
+        )
 
-    # 검증된 인자 (reason 제외)와 정리된 이유
-    call_args = validated.model_dump(exclude={"reason"})
+    # 검증된 인자 (reason·hypothesis 제외)와 정리된 이유·가설
+    call_args = validated.model_dump(exclude=set(NON_TOOL_ARG_FIELDS))
     reason = getattr(validated, "reason", reason)
+    hypothesis = getattr(validated, "hypothesis", hypothesis)
 
     # 중복 조사 확인 (도구까지 실행된 이전 호출과 같은 요청이면 실행하지 않음)
-    duplicate_step = find_duplicate_step(name, call_args, history)
+    duplicate_step = find_duplicate_step(name, call_args, history, input_models)
     if duplicate_step is not None:
         message = (
             f"중복 조사: {duplicate_step}번째 호출과 같은 요청이라 실행하지 않았습니다."
         )
         return message, history_entry(
-            step, name, call_args, reason, error=DUPLICATE_ERROR
+            step,
+            name,
+            call_args,
+            reason,
+            hypothesis=hypothesis,
+            error=DUPLICATE_ERROR,
         )
 
     # 교차 검증 대상 확인 (확보하지 않은 증거가 있으면 실행하지 않음)
@@ -142,14 +157,21 @@ def process_tool_call(
                 f"확보하지 않은 증거는 교차 검증할 수 없습니다: {', '.join(missing)}"
             )
             return message, history_entry(
-                step, name, call_args, reason, error=UNCOLLECTED_ERROR
+                step,
+                name,
+                call_args,
+                reason,
+                hypothesis=hypothesis,
+                error=UNCOLLECTED_ERROR,
             )
 
     # 실제 도구 함수 호출
     try:
         result = tool_function(case, **call_args)
     except ToolArgumentError as error:
-        return argument_error(name, call_args, reason, step, str(error))
+        return argument_error(
+            name, call_args, reason, step, str(error), hypothesis=hypothesis
+        )
 
     # 조회 도구 결과면 새 증거를 확보 목록에 추가
     found: bool | None = None
@@ -168,22 +190,49 @@ def process_tool_call(
                 )
     # 결과 JSON과 기록 반환
     entry = history_entry(
-        step, name, call_args, reason, found=found, evidence_ids=evidence_ids
+        step,
+        name,
+        call_args,
+        reason,
+        hypothesis=hypothesis,
+        found=found,
+        evidence_ids=evidence_ids,
     )
     return result.model_dump_json(), entry
+
+
+# 호출 인자 나누기
+# 원본 인자를 기록용 인자(reason·hypothesis 제외)와 이유·가설 문자열로 나누는 함수
+def split_call_args(
+    raw_args: dict[str, Any],
+) -> tuple[dict[str, Any], str | None, str | None]:
+    # 기록용 인자 (도구에 넘기지 않는 필드 제외)
+    record_args = {
+        key: value for key, value in raw_args.items() if key not in NON_TOOL_ARG_FIELDS
+    }
+    # 이유·가설 (문자열이 아니면 None)
+    raw_reason = raw_args.get("reason")
+    raw_hypothesis = raw_args.get("hypothesis")
+    reason = raw_reason if isinstance(raw_reason, str) else None
+    hypothesis = raw_hypothesis if isinstance(raw_hypothesis, str) else None
+    # 세 값 반환
+    return record_args, reason, hypothesis
 
 
 # 중복 호출 찾기
 # 도구까지 실행된 이전 호출 중 같은 요청이 있으면 그 순번을 반환하는 함수 (없으면 None)
 def find_duplicate_step(
-    name: str, call_args: dict[str, Any], history: list[HistoryEntry]
+    name: str,
+    call_args: dict[str, Any],
+    history: list[HistoryEntry],
+    input_models: InputModels = TOOL_INPUT_MODELS,
 ) -> int | None:
     # 이번 요청의 비교 키
     key = request_key(name, call_args)
     # 이전 기록을 순서대로 확인
     for entry in history:
         # 도구까지 실행되지 않은 호출은 제외
-        if not was_executed(entry):
+        if not was_executed(entry, input_models):
             continue
         # 같은 요청이면 그 순번 반환
         if request_key(entry["tool"], entry["args"]) == key:
@@ -194,17 +243,23 @@ def find_duplicate_step(
 
 # 실행 여부 판정
 # 기록된 호출이 입력 검증을 통과해 도구 함수까지 실행되었는지 반환하는 함수
-def was_executed(entry: HistoryEntry) -> bool:
+def was_executed(
+    entry: HistoryEntry, input_models: InputModels = TOOL_INPUT_MODELS
+) -> bool:
     # 중복·미확보 차단 호출은 실행되지 않음
     if entry["error"] in NOT_EXECUTED_ERRORS:
         return False
     # 알 수 없는 도구는 실행되지 않음
-    input_model = TOOL_INPUT_MODELS.get(entry["tool"])
+    input_model = input_models.get(entry["tool"])
     if input_model is None:
         return False
-    # 기록된 인자와 이유로 다시 검증해 통과하면 원래 호출도 검증을 통과한 것
+    # 기록된 인자와 이유(가설 필드가 있는 모델이면 가설도)로 다시 검증
+    data: dict[str, Any] = {**entry["args"], "reason": entry["reason"]}
+    if "hypothesis" in input_model.model_fields:
+        data["hypothesis"] = entry["hypothesis"]
+    # 통과하면 원래 호출도 검증을 통과한 것
     try:
-        input_model.model_validate({**entry["args"], "reason": entry["reason"]})
+        input_model.model_validate(data)
     except ValidationError:
         return False
     # 도구 함수까지 실행됨
@@ -212,13 +267,19 @@ def was_executed(entry: HistoryEntry) -> bool:
 
 
 # 요청 비교 키
-# 도구 이름과 인자로 중복 비교용 키를 만드는 함수 (교차 검증 증거는 순서 무관)
+# 도구 이름과 인자로 중복 비교용 키를 만드는 함수 (교차 검증 증거는 순서 무관, 가설·이유 제외)
 def request_key(name: str, args: dict[str, Any]) -> tuple[str, tuple[Any, ...]]:
     # 교차 검증은 증거 ID를 집합으로 비교
     if name == "cross_check_evidence":
         return name, tuple(sorted(set(args.get("evidence_ids", []))))
-    # 그 외는 인자 항목을 정렬해 비교
-    return name, tuple(sorted((key, str(value)) for key, value in args.items()))
+    # 그 외는 도구 인자 항목만 정렬해 비교
+    return name, tuple(
+        sorted(
+            (key, str(value))
+            for key, value in args.items()
+            if key not in NON_TOOL_ARG_FIELDS
+        )
+    )
 
 
 # 조사 기록 생성
@@ -229,6 +290,7 @@ def history_entry(
     args: dict[str, Any],
     reason: str | None,
     *,
+    hypothesis: str | None = None,
     found: bool | None = None,
     evidence_ids: list[str] | None = None,
     error: str | None = None,
@@ -239,6 +301,7 @@ def history_entry(
         tool=name,
         args=args,
         reason=reason,
+        hypothesis=hypothesis,
         found=found,
         evidence_ids=evidence_ids or [],
         error=error,
@@ -253,9 +316,13 @@ def argument_error(
     reason: str | None,
     step: int,
     message: str,
+    *,
+    hypothesis: str | None = None,
 ) -> tuple[str, HistoryEntry]:
     # 접두어를 붙인 메시지와 오류 기록 반환
-    entry = history_entry(step, name, args, reason, error=message)
+    entry = history_entry(
+        step, name, args, reason, hypothesis=hypothesis, error=message
+    )
     return f"{TOOL_ARGUMENT_ERROR_PREFIX}{message}", entry
 
 
