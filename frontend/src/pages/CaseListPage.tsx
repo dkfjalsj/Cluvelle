@@ -73,7 +73,7 @@ export function CaseListPage() {
     <PageContainer>
       {/* 안내 문장 (앱 이름은 머리글에 표시) */}
       <p className="text-sm text-slate-400">
-        사건을 고르면 AI 탐정이 조사를 시작해요.
+        사건을 고르면 AI 수사관이 조사를 시작해요.
       </p>
 
       {/* 로딩 중 안내와 스켈레톤 */}
