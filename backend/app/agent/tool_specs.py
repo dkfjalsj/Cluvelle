@@ -6,6 +6,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 REASON_DESCRIPTION = "이 도구를 지금 선택한 이유를 한 문장으로"
 # reason 최대 길이
 REASON_MAX_LENGTH = 200
+# hypothesis 필드 설명
+HYPOTHESIS_DESCRIPTION = "지금까지의 조사로 세운 현재 가설을 한 문장으로"
+# hypothesis 최대 길이
+HYPOTHESIS_MAX_LENGTH = 200
+# 도구 함수에 넘기지 않고 기록 인자에서도 빼는 필드
+NON_TOOL_ARG_FIELDS = frozenset({"reason", "hypothesis"})
 
 
 # 도구 입력 기반
@@ -82,6 +88,92 @@ TOOL_INPUT_MODELS: dict[str, type[BaseModel]] = {
     "cross_check_evidence": CrossCheckInput,
 }
 
+# 가설 필드를 더한 적응형 입력 모델
+
+
+# 가설 입력 공통
+# 적응형 도구 입력에 현재 가설(hypothesis)을 필수로 더하는 공통 클래스
+class HypothesisInput(BaseModel):
+    # 현재 가설 (앞뒤 공백 제거 후 1~200자)
+    hypothesis: str = Field(description=HYPOTHESIS_DESCRIPTION)
+
+    # 가설 검증
+    # 앞뒤 공백을 제거한 뒤 비어 있거나 200자를 넘으면 오류를 내는 함수
+    @field_validator("hypothesis")
+    @classmethod
+    def validate_hypothesis(cls, value: str) -> str:
+        # 공통 검증 규칙 적용 후 정리된 값 반환
+        return normalize_hypothesis_or_raise(value)
+
+
+# 적응형 현장 조사 입력
+# 가설 필드를 더한 inspect_scene 입력 인자를 정의하는 클래스
+class AdaptiveInspectSceneInput(InspectSceneInput, HypothesisInput):
+    pass
+
+
+# 적응형 용의자 심문 입력
+# 가설 필드를 더한 interview_suspect 입력 인자를 정의하는 클래스
+class AdaptiveInterviewSuspectInput(InterviewSuspectInput, HypothesisInput):
+    pass
+
+
+# 적응형 CCTV 확인 입력
+# 가설 필드를 더한 check_cctv 입력 인자를 정의하는 클래스
+class AdaptiveCheckCctvInput(CheckCctvInput, HypothesisInput):
+    pass
+
+
+# 적응형 알리바이 확인 입력
+# 가설 필드를 더한 verify_alibi 입력 인자를 정의하는 클래스
+class AdaptiveVerifyAlibiInput(VerifyAlibiInput, HypothesisInput):
+    pass
+
+
+# 적응형 교차 검증 입력
+# 가설 필드를 더한 cross_check_evidence 입력 인자를 정의하는 클래스
+class AdaptiveCrossCheckInput(CrossCheckInput, HypothesisInput):
+    pass
+
+
+# 도구 이름 → 적응형 입력 모델 (가설 필수)
+ADAPTIVE_TOOL_INPUT_MODELS: dict[str, type[BaseModel]] = {
+    "inspect_scene": AdaptiveInspectSceneInput,
+    "interview_suspect": AdaptiveInterviewSuspectInput,
+    "check_cctv": AdaptiveCheckCctvInput,
+    "verify_alibi": AdaptiveVerifyAlibiInput,
+    "cross_check_evidence": AdaptiveCrossCheckInput,
+}
+
+
+# 가설 정리·검증
+# 가설 문자열의 앞뒤 공백을 제거하고 비어 있거나 200자를 넘으면 오류를 내는 함수
+def normalize_hypothesis_or_raise(value: str) -> str:
+    # 앞뒤 공백 제거
+    stripped = value.strip()
+    # 비어 있으면 오류
+    if not stripped:
+        raise ValueError("hypothesis는 비어 있을 수 없습니다.")
+    # 너무 길면 오류
+    if len(stripped) > HYPOTHESIS_MAX_LENGTH:
+        raise ValueError(f"hypothesis는 {HYPOTHESIS_MAX_LENGTH}자 이하여야 합니다.")
+    # 정리된 값 반환
+    return stripped
+
+
+# 유효한 가설 꺼내기
+# 값이 유효한 가설 문자열이면 정리된 값을, 아니면 None을 반환하는 함수
+def valid_hypothesis(value: object) -> str | None:
+    # 문자열이 아니면 없음
+    if not isinstance(value, str):
+        return None
+    # 검증에 실패하면 없음
+    try:
+        return normalize_hypothesis_or_raise(value)
+    except ValueError:
+        return None
+
+
 # 도구 이름 → 설명
 TOOL_DESCRIPTIONS: dict[str, str] = {
     "inspect_scene": "공개된 장소 하나를 조사해 현장 증거를 확인한다.",
@@ -93,12 +185,12 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
 
 
 # LLM 도구 목록 생성
-# 5개 도구를 bind_tools에 넘길 수 있는 함수 호출 형식으로 만들어 반환하는 함수
+# 적응형 5개 도구(가설 포함)를 bind_tools에 넘길 수 있는 함수 호출 형식으로 만들어 반환하는 함수
 def get_llm_tools() -> list[dict[str, Any]]:
     # 도구 정의 목록
     tools: list[dict[str, Any]] = []
     # 도구마다 이름·설명·입력 스키마 조합 (사건 객체는 스키마에 넣지 않음)
-    for name, model in TOOL_INPUT_MODELS.items():
+    for name, model in ADAPTIVE_TOOL_INPUT_MODELS.items():
         tools.append(
             {
                 "type": "function",

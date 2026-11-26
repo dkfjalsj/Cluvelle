@@ -47,6 +47,8 @@ class HistoryEntry(TypedDict):
     args: dict[str, Any]
     # 도구를 고른 이유 (없으면 None)
     reason: str | None
+    # 호출 시점의 현재 가설 (값을 얻지 못하면 None)
+    hypothesis: str | None
     # 증거 발견 여부 (교차 검증·오류는 None)
     found: bool | None
     # 이번 호출로 반환된 증거 ID

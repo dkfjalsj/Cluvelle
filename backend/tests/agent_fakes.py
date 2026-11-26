@@ -13,14 +13,20 @@ from app.schemas.report import FinalReport
 
 # 수사 종료 응답 문구
 FINISH_TEXT = "수사를 마칩니다."
+# 테스트용 기본 가설
+DEFAULT_HYPOTHESIS = "테스트 가설"
 
 
 # 도구 호출 메시지 생성
-# 도구 호출 하나를 담은 AIMessage를 만드는 함수
+# 도구 호출 하나를 담은 AIMessage를 만드는 함수 (reason이 있고 hypothesis가 없으면 기본 가설 추가)
 def tool_call_message(name: str, args: dict[str, Any], call_id: str) -> AIMessage:
+    # 이유가 있는 호출에는 기본 가설을 채움 (가설 누락을 시험할 때는 reason도 빼거나 직접 구성)
+    call_args = dict(args)
+    if "reason" in call_args and "hypothesis" not in call_args:
+        call_args["hypothesis"] = DEFAULT_HYPOTHESIS
     # 도구 호출 하나짜리 AIMessage 반환
     return AIMessage(
-        content="", tool_calls=[{"name": name, "args": args, "id": call_id}]
+        content="", tool_calls=[{"name": name, "args": call_args, "id": call_id}]
     )
 
 

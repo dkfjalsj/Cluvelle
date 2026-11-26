@@ -15,7 +15,7 @@ from app.agent.report_nodes import (
     route_after_validator,
 )
 from app.agent.state import InvestigationState
-from app.agent.tool_specs import get_llm_tools
+from app.agent.tool_specs import ADAPTIVE_TOOL_INPUT_MODELS, get_llm_tools
 from app.schemas.case import CaseFile
 
 # 테스트에서 도구 함수를 바꿔 끼울 수 있도록 같은 표를 이 모듈 이름으로도 노출
@@ -71,7 +71,12 @@ def build_investigation_graph(llm: BaseChatModel, case: CaseFile) -> CompiledSta
         # 도구 호출을 순서대로 공통 처리
         for tool_call in tool_calls:
             message, count = handle_tool_call(
-                case, tool_call, count, collected, history
+                case,
+                tool_call,
+                count,
+                collected,
+                history,
+                input_models=ADAPTIVE_TOOL_INPUT_MODELS,
             )
             tool_messages.append(message)
 

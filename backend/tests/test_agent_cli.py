@@ -41,7 +41,11 @@ def basic_script() -> list[AIMessage]:
             tool_calls=[
                 {
                     "name": "inspect_scene",
-                    "args": {"location_id": "L1", "reason": "보관함 상태 확인"},
+                    "args": {
+                        "location_id": "L1",
+                        "reason": "보관함 상태 확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "c1",
                 }
             ],
@@ -51,7 +55,11 @@ def basic_script() -> list[AIMessage]:
             tool_calls=[
                 {
                     "name": "inspect_scene",
-                    "args": {"location_id": "L3", "reason": "창고 확인"},
+                    "args": {
+                        "location_id": "L3",
+                        "reason": "창고 확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "c2",
                 }
             ],
@@ -61,7 +69,11 @@ def basic_script() -> list[AIMessage]:
             tool_calls=[
                 {
                     "name": "inspect_scene",
-                    "args": {"location_id": "L4", "reason": "휴게실 확인"},
+                    "args": {
+                        "location_id": "L4",
+                        "reason": "휴게실 확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "c3",
                 }
             ],
@@ -71,7 +83,11 @@ def basic_script() -> list[AIMessage]:
             tool_calls=[
                 {
                     "name": "cross_check_evidence",
-                    "args": {"evidence_ids": ["E1", "E2"], "reason": "비교"},
+                    "args": {
+                        "evidence_ids": ["E1", "E2"],
+                        "reason": "비교",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "c4",
                 }
             ],
@@ -95,7 +111,7 @@ def test_cli_runs_with_fake_model(
     # 머리말 확인
     assert "사건: CASE-001" in output
     assert "방식: adaptive" in output
-    assert "프롬프트 버전: adaptive-v2" in output
+    assert "프롬프트 버전: adaptive-v3" in output
     assert "조사 예산: 10회" in output
     # 도구 블록 확인
     assert '[1/10] inspect_scene {"location_id": "L1"}' in output

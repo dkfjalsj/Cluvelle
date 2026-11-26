@@ -58,10 +58,18 @@ def test_duplicate_inspect_scene(monkeypatch: pytest.MonkeyPatch) -> None:
     state = run_script(
         [
             tool_call_message(
-                "inspect_scene", {"location_id": "L1", "reason": "첫 확인"}, "a"
+                "inspect_scene",
+                {"location_id": "L1", "reason": "첫 확인", "hypothesis": "테스트 가설"},
+                "a",
             ),
             tool_call_message(
-                "inspect_scene", {"location_id": "L1", "reason": "다시 확인"}, "b"
+                "inspect_scene",
+                {
+                    "location_id": "L1",
+                    "reason": "다시 확인",
+                    "hypothesis": "테스트 가설",
+                },
+                "b",
             ),
         ]
     )
@@ -86,12 +94,20 @@ def test_duplicate_in_same_turn() -> None:
         tool_calls=[
             {
                 "name": "verify_alibi",
-                "args": {"suspect_id": "S3", "reason": "기록 확인"},
+                "args": {
+                    "suspect_id": "S3",
+                    "reason": "기록 확인",
+                    "hypothesis": "테스트 가설",
+                },
                 "id": "x1",
             },
             {
                 "name": "verify_alibi",
-                "args": {"suspect_id": "S3", "reason": "기록 재확인"},
+                "args": {
+                    "suspect_id": "S3",
+                    "reason": "기록 재확인",
+                    "hypothesis": "테스트 가설",
+                },
                 "id": "x2",
             },
         ],
@@ -113,22 +129,40 @@ def test_cross_check_order_duplicate() -> None:
         [
             tool_call_message(
                 "interview_suspect",
-                {"suspect_id": "S3", "topic_id": "T1", "reason": "동선 확인"},
+                {
+                    "suspect_id": "S3",
+                    "topic_id": "T1",
+                    "reason": "동선 확인",
+                    "hypothesis": "테스트 가설",
+                },
                 "a",
             ),
             tool_call_message(
                 "check_cctv",
-                {"camera_id": "C3", "time_window": "22:00-23:00", "reason": "주차장"},
+                {
+                    "camera_id": "C3",
+                    "time_window": "22:00-23:00",
+                    "reason": "주차장",
+                    "hypothesis": "테스트 가설",
+                },
                 "b",
             ),
             tool_call_message(
                 "cross_check_evidence",
-                {"evidence_ids": ["E9", "E19"], "reason": "비교"},
+                {
+                    "evidence_ids": ["E9", "E19"],
+                    "reason": "비교",
+                    "hypothesis": "테스트 가설",
+                },
                 "c",
             ),
             tool_call_message(
                 "cross_check_evidence",
-                {"evidence_ids": ["E19", "E9"], "reason": "다시 비교"},
+                {
+                    "evidence_ids": ["E19", "E9"],
+                    "reason": "다시 비교",
+                    "hypothesis": "테스트 가설",
+                },
                 "d",
             ),
         ]
@@ -147,22 +181,40 @@ def test_cross_check_requires_collected_evidence() -> None:
         [
             tool_call_message(
                 "interview_suspect",
-                {"suspect_id": "S3", "topic_id": "T1", "reason": "동선 확인"},
+                {
+                    "suspect_id": "S3",
+                    "topic_id": "T1",
+                    "reason": "동선 확인",
+                    "hypothesis": "테스트 가설",
+                },
                 "a",
             ),
             tool_call_message(
                 "cross_check_evidence",
-                {"evidence_ids": ["E9", "E19"], "reason": "비교"},
+                {
+                    "evidence_ids": ["E9", "E19"],
+                    "reason": "비교",
+                    "hypothesis": "테스트 가설",
+                },
                 "b",
             ),
             tool_call_message(
                 "check_cctv",
-                {"camera_id": "C3", "time_window": "22:00-23:00", "reason": "주차장"},
+                {
+                    "camera_id": "C3",
+                    "time_window": "22:00-23:00",
+                    "reason": "주차장",
+                    "hypothesis": "테스트 가설",
+                },
                 "c",
             ),
             tool_call_message(
                 "cross_check_evidence",
-                {"evidence_ids": ["E9", "E19"], "reason": "확보 후 비교"},
+                {
+                    "evidence_ids": ["E9", "E19"],
+                    "reason": "확보 후 비교",
+                    "hypothesis": "테스트 가설",
+                },
                 "d",
             ),
         ]
@@ -196,7 +248,9 @@ def test_remaining_budget_line_on_every_message() -> None:
         ("verify_alibi", {"suspect_id": "S1"}),
     ]
     responses = [
-        tool_call_message(name, {**args, "reason": "확인"}, f"r{index}")
+        tool_call_message(
+            name, {**args, "reason": "확인", "hypothesis": "테스트 가설"}, f"r{index}"
+        )
         for index, (name, args) in enumerate(calls, start=1)
     ]
     # 남은 1회에 호출 2개를 보내 하나는 예산 소진 안내가 되게 함
@@ -206,12 +260,20 @@ def test_remaining_budget_line_on_every_message() -> None:
             tool_calls=[
                 {
                     "name": "verify_alibi",
-                    "args": {"suspect_id": "S2", "reason": "확인"},
+                    "args": {
+                        "suspect_id": "S2",
+                        "reason": "확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "last1",
                 },
                 {
                     "name": "verify_alibi",
-                    "args": {"suspect_id": "S3", "reason": "확인"},
+                    "args": {
+                        "suspect_id": "S3",
+                        "reason": "확인",
+                        "hypothesis": "테스트 가설",
+                    },
                     "id": "last2",
                 },
             ],

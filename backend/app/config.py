@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3.8-flash"
     # Gemini 요청 제한 시간(초) (환경변수 GEMINI_TIMEOUT_SECONDS)
     gemini_timeout_seconds: float = 60.0
+    # 동시에 진행 중인 수사 수 상한 (환경변수 MAX_CONCURRENT_RUNS)
+    max_concurrent_runs: int = 1
+    # IP당 하루 수사 시작 횟수 상한 (환경변수 DAILY_RUNS_PER_IP)
+    daily_runs_per_ip: int = 5
+    # 서버 전체 하루 수사 시작 횟수 상한 (환경변수 DAILY_RUNS_TOTAL)
+    daily_runs_total: int = 30
     # CORS 허용 Origin 목록 (콤마 구분 문자열을 직접 파싱하도록 JSON 디코딩 비활성화)
     allowed_origins: Annotated[list[str], NoDecode] = ["http://localhost:5180"]
 
