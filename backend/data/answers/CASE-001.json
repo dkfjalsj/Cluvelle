@@ -1,0 +1,51 @@
+{
+  "case_id": "CASE-001",
+  "culprit_id": "S3",
+  "decisive_evidence_ids": [
+    "E1",
+    "E9",
+    "E19"
+  ],
+  "misleading_evidence_ids": [
+    "E14",
+    "E20"
+  ],
+  "solution_path": [
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L1"
+      }
+    },
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L3"
+      }
+    },
+    {
+      "tool": "check_cctv",
+      "args": {
+        "camera_id": "C3",
+        "time_window": "22:00-23:00"
+      }
+    },
+    {
+      "tool": "interview_suspect",
+      "args": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      }
+    },
+    {
+      "tool": "cross_check_evidence",
+      "args": {
+        "evidence_ids": [
+          "E9",
+          "E19"
+        ]
+      }
+    }
+  ],
+  "grading_notes": "E14는 E21(반출 내역 일치)로, E20은 E3·E16(충전기, 4분 체류, 빈손)으로 해소된다. E17·E18은 차량 기록이므로 운전자를 S3로 단정하면 근거 부족이며 신원은 E19에서만 확인된다. E16의 21:10 이후 복도 쪽 출입 없음은 범인이 비상계단 경로로 들어왔음을 뒷받침한다. E8(채무 암시)은 동기일 뿐 증거가 아니다. C3 21:00-22:00을 먼저 조회하면 일반적 경로는 6회다."
+}

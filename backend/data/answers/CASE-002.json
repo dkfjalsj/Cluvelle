@@ -1,0 +1,48 @@
+{
+  "case_id": "CASE-002",
+  "culprit_id": "S2",
+  "decisive_evidence_ids": [
+    "E2",
+    "E20",
+    "E22"
+  ],
+  "misleading_evidence_ids": [
+    "E9",
+    "E19"
+  ],
+  "solution_path": [
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L1"
+      }
+    },
+    {
+      "tool": "inspect_scene",
+      "args": {
+        "location_id": "L3"
+      }
+    },
+    {
+      "tool": "check_cctv",
+      "args": {
+        "camera_id": "C3",
+        "time_window": "20:00-21:00"
+      }
+    },
+    {
+      "tool": "verify_alibi",
+      "args": {
+        "suspect_id": "S2"
+      }
+    },
+    {
+      "tool": "interview_suspect",
+      "args": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      }
+    }
+  ],
+  "grading_notes": "E2의 SG-0392는 E22의 사용 기록으로만 S2와 연결된다(E3은 스티커가 경비실 비품임만 보여준다). E9는 E21(같은 시각 학예실 출입 기록)과 교차 검증하면 장소가 다르고, E17(정문 출입 없음)로도 해소된다. E19는 E23(빈 보온박스 반출 확인)으로 해소된다. E7·E13·E23은 S2 동선과 관련된 보조 근거다. S1의 개인 열쇠(E5)는 기회일 뿐, 20:26~21:00 S1은 로비에 있었다(E15). 전시품은 건물 안에서 회수되었으므로 실제 성격은 무단 반출 시도와 은닉이다. 일반적 경로는 마지막에 cross_check_evidence([E7, E20])를 더한 6회다."
+}

@@ -1,0 +1,12 @@
+{
+  "case_id": "CASE-999",
+  "culprit_id": "S1",
+  "decisive_evidence_ids": ["E2", "E3"],
+  "misleading_evidence_ids": ["E4"],
+  "solution_path": [
+    { "tool": "interview_suspect", "args": { "suspect_id": "S1", "topic_id": "T1" } },
+    { "tool": "check_cctv", "args": { "camera_id": "C1", "time_window": "21:00-22:00" } },
+    { "tool": "cross_check_evidence", "args": { "evidence_ids": ["E2", "E3"] } }
+  ],
+  "grading_notes": "테스트용 메모: 진술과 CCTV 기록이 충돌한다."
+}

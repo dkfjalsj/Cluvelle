@@ -36,6 +36,12 @@ jobs:
       # Ruff 서식 검사
       - run: uv run ruff format --check .
 
+      # 평가 스크립트 폴더 Ruff 린트 검사
+      - run: uv run ruff check ../evaluation
+
+      # 평가 스크립트 폴더 Ruff 서식 검사
+      - run: uv run ruff format --check ../evaluation
+
       # 단위 테스트 실행
       - run: uv run pytest
 
@@ -113,8 +119,8 @@ jobs:
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          # deploy hook에 POST 요청 (-f: HTTP 오류 시 실패, -sS: 진행 표시 숨기고 오류만 표시)
-          curl -fsS -X POST -o /dev/null "$RENDER_DEPLOY_HOOK_URL"
+          # deploy hook에 POST 요청 (-f: HTTP 오류 시 실패, -sS: 진행 표시 숨기고 오류만 표시, 최대 30초)
+          curl -fsS --max-time 30 -X POST -o /dev/null "$RENDER_DEPLOY_HOOK_URL"
           # 호출 성공 출력
           echo "Render deploy triggered."
 
@@ -123,8 +129,8 @@ jobs:
         env:
           VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
         run: |
-          # deploy hook에 POST 요청 (-f: HTTP 오류 시 실패, -sS: 진행 표시 숨기고 오류만 표시)
-          curl -fsS -X POST -o /dev/null "$VERCEL_DEPLOY_HOOK_URL"
+          # deploy hook에 POST 요청 (-f: HTTP 오류 시 실패, -sS: 진행 표시 숨기고 오류만 표시, 최대 30초)
+          curl -fsS --max-time 30 -X POST -o /dev/null "$VERCEL_DEPLOY_HOOK_URL"
           # 호출 성공 출력
           echo "Vercel deploy triggered."
 

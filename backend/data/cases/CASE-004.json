@@ -1,0 +1,536 @@
+{
+  "case_id": "CASE-004",
+  "version": 1,
+  "title": "카페 비밀 레시피 유출",
+  "difficulty": "normal",
+  "summary": "시그니처 메뉴의 배합 레시피가 경쟁 카페로 넘어갔다.",
+  "introduction": "로스터리 카페 모노브루의 시그니처 메뉴 '흑임자 크림 라떼' 배합 레시피가 경쟁 카페 퀵샷에 넘어갔다. 오늘 아침 퀵샷이 SNS에 올린 신메뉴 사진 구석에 모노브루 레시피 출력물이 찍혀 있었고, 출력물 아래쪽의 보안 출력 번호 '#0018'이 보였다. 레시피 원본 파일은 매장 사장실 PC에만 있다. 어제 오후 매장에서 근무한 직원은 세 명이다.",
+  "off_site_label": "매장 밖",
+  "tool_budget": 10,
+  "suspects": [
+    {
+      "id": "S1",
+      "name": "류지안",
+      "role": "수석 바리스타",
+      "description": "시그니처 메뉴 개발에 참여했고 레시피 파일 열람 권한이 있다."
+    },
+    {
+      "id": "S2",
+      "name": "탁은비",
+      "role": "매장 매니저",
+      "description": "매장 운영과 계산대를 맡고 레시피 파일 열람 권한이 있다."
+    },
+    {
+      "id": "S3",
+      "name": "남궁현",
+      "role": "파트타이머",
+      "description": "재고 정리와 청소를 맡는다. 레시피 파일 권한은 없다."
+    }
+  ],
+  "locations": [
+    {
+      "id": "L1",
+      "name": "사장실",
+      "description": "레시피 원본 파일이 있는 공용 PC"
+    },
+    {
+      "id": "L2",
+      "name": "직원 통로",
+      "description": "사장실·휴게실·창고로 이어짐"
+    },
+    {
+      "id": "L3",
+      "name": "바",
+      "description": "에스프레소 머신과 계산대"
+    },
+    {
+      "id": "L4",
+      "name": "직원 휴게실",
+      "description": "문 옆에 공유 프린터"
+    },
+    {
+      "id": "L5",
+      "name": "창고",
+      "description": "뒷문 있음"
+    },
+    {
+      "id": "L6",
+      "name": "매장 홀"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "C1",
+      "name": "바 카메라",
+      "location_id": "L3",
+      "time_windows": [
+        "13:00-14:00",
+        "14:00-15:00",
+        "15:00-16:00",
+        "16:00-17:00"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "직원 통로 카메라",
+      "description": "사장실 문과 휴게실 문 옆 공유 프린터까지 보이는 근접 설치",
+      "location_id": "L2",
+      "time_windows": [
+        "13:00-14:00",
+        "14:00-15:00",
+        "15:00-16:00",
+        "16:00-17:00"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "창고 카메라",
+      "location_id": "L5",
+      "time_windows": [
+        "13:00-14:00",
+        "14:00-15:00",
+        "15:00-16:00",
+        "16:00-17:00"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "T1",
+      "name": "오후 동선"
+    },
+    {
+      "id": "T2",
+      "name": "레시피 파일과 권한"
+    },
+    {
+      "id": "T3",
+      "name": "다른 사람에 대해"
+    },
+    {
+      "id": "T4",
+      "name": "목격한 것"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L1"
+      },
+      "summary": "공용 PC 세션 기록: 13:06 류지안 계정 로그인 후 15:41까지 화면 잠금·로그아웃 기록 없음. 15:40 '시그니처_레시피_v3' 열람, 15:41 휴게실 공유 프린터로 출력 전송. 16:30 자동 잠금. 레시피 파일 열람 권한은 류지안·탁은비 계정에만 있음.",
+      "facts": []
+    },
+    {
+      "id": "E2",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L4"
+      },
+      "summary": "공유 프린터 기록: 15:42 출력 작업 #0018 '시그니처_레시피_v3' 1매, 요청 PC 사장실 공용 PC(로그인 계정 류지안). 15:00~16:00 사이 이 프린터의 출력 작업은 #0018 한 건뿐. 출력물은 트레이에 남아 있지 않고, 휴게실 세절기는 비어 있음.",
+      "facts": []
+    },
+    {
+      "id": "E3",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L5"
+      },
+      "summary": "원두 포대가 절반쯤 정리된 상태. 정리 체크리스트에 15:30 시작 서명(남궁현)만 있고 완료 서명은 없음.",
+      "facts": []
+    },
+    {
+      "id": "E4",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T1"
+      },
+      "summary": "15:30부터 16:00까지 바에서 단체 주문 40잔을 만들었다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:30",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T2"
+      },
+      "summary": "레시피 파일은 사장실 PC에 있고 나와 매니저만 열 수 있다. 점심 뒤 사장실 PC 화면을 잠그지 않고 나왔던 것 같다.",
+      "facts": []
+    },
+    {
+      "id": "E6",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T3"
+      },
+      "summary": "남궁현은 여기 오기 전에 퀵샷에서 일했다고 들었다.",
+      "facts": []
+    },
+    {
+      "id": "E7",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      },
+      "summary": "15시부터 계산대에서 결제와 포장을 맡았다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "15:00",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E8",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T2"
+      },
+      "summary": "레시피 파일 권한은 나와 류지안뿐이다. 파일은 사장실 PC에서만 열리고 출력도 거기서만 된다.",
+      "facts": []
+    },
+    {
+      "id": "E9",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T3"
+      },
+      "summary": "류지안이 요즘 퀵샷 사장과 자주 연락한다는 말이 돌았다.",
+      "facts": []
+    },
+    {
+      "id": "E10",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T4"
+      },
+      "summary": "15:40쯤 계산대에서 보니 남궁현이 직원 통로 쪽으로 가는 게 보였다. 창고에 가는 줄 알았다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "15:40",
+          "end": "15:40"
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      },
+      "summary": "15:30부터 16:00까지 창고에서 원두 포대를 정리했다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "15:30",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E12",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T2"
+      },
+      "summary": "나는 레시피 파일 권한이 없다. 사장실에는 청소할 때만 들어간다.",
+      "facts": []
+    },
+    {
+      "id": "E13",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T3"
+      },
+      "summary": "류지안 씨가 퀵샷 사람들과 아는 사이라더라.",
+      "facts": []
+    },
+    {
+      "id": "E14",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "14:00-15:00"
+      },
+      "summary": "류지안과 탁은비가 바와 계산대에서 근무함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "14:00",
+          "end": "15:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "14:00",
+          "end": "15:00"
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "15:00-16:00"
+      },
+      "summary": "15:30부터 16:00까지 류지안이 바에서 단체 주문 음료를 쉬지 않고 만드는 모습이 계속 보임. 탁은비는 계산대에서 결제와 포장을 함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:30",
+          "end": "16:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "15:00",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "16:00-17:00"
+      },
+      "summary": "류지안과 탁은비가 바와 계산대에서 근무함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "16:00",
+          "end": "17:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "16:00",
+          "end": "17:00"
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "13:00-14:00"
+      },
+      "summary": "13:05 류지안이 사장실에 들어감. 13:30 나옴.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "13:05",
+          "end": "13:05"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "13:30",
+          "end": "13:30"
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "15:00-16:00"
+      },
+      "summary": "15:38 남궁현이 사장실 문을 열고 들어감(근접 화면으로 얼굴 식별). 15:41 나와 휴게실 쪽으로 감. 15:42 휴게실 문 옆 공유 프린터 트레이에서 종이 한 장을 집음(종이 내용과 번호는 보이지 않음). 15:46 그 종이를 들고 휴게실에서 나와 창고 쪽으로 감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "15:38",
+          "end": "15:38"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "15:41",
+          "end": "15:41"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L4",
+          "start": "15:42",
+          "end": "15:42"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L2",
+          "start": "15:46",
+          "end": "15:46"
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "15:00-16:00"
+      },
+      "summary": "15:31 남궁현이 창고에 들어와 원두 포대를 옮김. 15:37 나감. 15:48 다시 들어와 16:00까지 정리함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "15:31",
+          "end": "15:37"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "15:48",
+          "end": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "16:00-17:00"
+      },
+      "summary": "16:20 남궁현이 뒷문으로 쓰레기를 내놓음. 16:22 돌아옴.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "16:20",
+          "end": "16:20"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "16:22",
+          "end": "16:22"
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S1"
+      },
+      "summary": "사장실 PC 로그인 기록: 13:06 류지안 계정 로그인, 그 뒤 로그아웃 기록 없이 16:30 자동 잠금. 바 제조 완료 입력(류지안): 15:32~15:58 41건, 15:45 입력 포함.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "13:06",
+          "end": "13:06"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:32",
+          "end": "15:32"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:45",
+          "end": "15:45"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L3",
+          "start": "15:58",
+          "end": "15:58"
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S2"
+      },
+      "summary": "계산대 결제 기록(탁은비 계정): 15:01~16:05 결제 52건.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "15:01",
+          "end": "15:01"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L3",
+          "start": "16:05",
+          "end": "16:05"
+        }
+      ]
+    },
+    {
+      "id": "E23",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S3"
+      },
+      "summary": "근무 기록(남궁현): 14:00~18:00 근무, 15:30~16:00 창고 정리 배정. 레시피 파일 권한 없음. 매장 출입은 파트타이머 공용 카드 사용.",
+      "facts": []
+    }
+  ]
+}

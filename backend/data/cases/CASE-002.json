@@ -1,0 +1,568 @@
+{
+  "case_id": "CASE-002",
+  "version": 1,
+  "title": "미술관 전시품 분실",
+  "difficulty": "intro",
+  "summary": "후원자 리셉션이 열린 밤, 닫힌 전시실의 진열장에서 청동 거울이 사라졌다.",
+  "introduction": "해온시립미술관은 오늘 밤 19:00부터 21:00까지 1층 로비에서 후원자 리셉션을 열었다. 2전시실은 18:00에 문을 닫았다. 21:30쯤 마감 점검을 시작한 학예연구사 서하린이 특별전 전시품 '청동 거울'(유물번호 HM-112)의 진열장이 비어 있는 것을 발견했다. 리셉션 시간 동안 전시실 구역에 출입할 수 있었던 사람은 세 명이다.",
+  "off_site_label": "미술관 밖",
+  "tool_budget": 10,
+  "suspects": [
+    {
+      "id": "S1",
+      "name": "서하린",
+      "role": "학예연구사",
+      "description": "특별전 담당. 오늘 밤 리셉션 진행을 맡았다."
+    },
+    {
+      "id": "S2",
+      "name": "문태오",
+      "role": "야간 경비원",
+      "description": "오늘 밤 당직 경비원. 순찰과 경비실 모니터 근무를 맡는다."
+    },
+    {
+      "id": "S3",
+      "name": "오지윤",
+      "role": "케이터링 업체 직원",
+      "description": "리셉션 음식과 음료를 담당한 외부 업체 직원이다."
+    }
+  ],
+  "locations": [
+    {
+      "id": "L1",
+      "name": "2전시실",
+      "description": "분실 진열장 있음"
+    },
+    {
+      "id": "L2",
+      "name": "2층 복도",
+      "description": "2전시실 정문과 학예실 문이 있음"
+    },
+    {
+      "id": "L3",
+      "name": "수장고 통로",
+      "description": "직원 전용"
+    },
+    {
+      "id": "L4",
+      "name": "경비실"
+    },
+    {
+      "id": "L5",
+      "name": "1층 로비",
+      "description": "리셉션 장소"
+    },
+    {
+      "id": "L6",
+      "name": "하역장"
+    },
+    {
+      "id": "L7",
+      "name": "학예실",
+      "description": "2층"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "C1",
+      "name": "로비 카메라",
+      "location_id": "L5",
+      "time_windows": [
+        "19:00-20:00",
+        "20:00-21:00",
+        "21:00-22:00"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "2층 복도 카메라",
+      "description": "2전시실 정문과 학예실 문이 보임",
+      "location_id": "L2",
+      "time_windows": [
+        "19:00-20:00",
+        "20:00-21:00",
+        "21:00-22:00"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "하역장 카메라",
+      "description": "직원 통로 입구 바로 위 근접 설치",
+      "location_id": "L6",
+      "time_windows": [
+        "19:00-20:00",
+        "20:00-21:00",
+        "21:00-22:00"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "T1",
+      "name": "리셉션 시간 동선"
+    },
+    {
+      "id": "T2",
+      "name": "전시실 출입과 열쇠"
+    },
+    {
+      "id": "T3",
+      "name": "다른 사람에 대해"
+    },
+    {
+      "id": "T4",
+      "name": "목격한 것"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L1"
+      },
+      "summary": "진열장 유리와 자물쇠에 손상 없음(열쇠로 열린 것으로 보임). 진열장 센서 기록에 20:47 '문 열림' 1회. 받침대에 중성지 보풀이 남아 있음. 정문 잠금장치는 정상이며, 수장고 통로 쪽 뒷문은 잠기지 않은 상태.",
+      "facts": []
+    },
+    {
+      "id": "E2",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L3"
+      },
+      "summary": "통로 끝 소화전함 안에서 중성지로 싼 청동 거울(HM-112) 발견. 중성지는 보안 봉인 스티커(일련번호 SG-0392)로 봉해져 있음. 통로에는 카메라가 없고, 한쪽 끝은 2전시실 뒷문, 다른 끝은 하역장 쪽 직원 통로 입구로 이어짐.",
+      "facts": []
+    },
+    {
+      "id": "E3",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L4"
+      },
+      "summary": "열쇠함은 비밀번호식이며 사용 기록이 남지 않음. 진열장 예비 열쇠가 제자리에 걸려 있음. 책상 서랍에 SG 일련번호가 찍힌 보안 봉인 스티커 묶음이 있음.",
+      "facts": []
+    },
+    {
+      "id": "E4",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T1"
+      },
+      "summary": "19:00부터 로비에서 리셉션을 진행했다. 20:15쯤 2층 학예실에 안내 책자를 가지러 갔다가 20:25쯤 로비로 돌아왔다. 21:30쯤 마감 점검을 하다 분실을 발견했다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "19:00",
+          "end": "20:13"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L7",
+          "start": "20:15",
+          "end": "20:24"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "20:26",
+          "end": "21:00"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "21:31",
+          "end": "21:31"
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T2"
+      },
+      "summary": "진열장 열쇠는 두 개다. 하나는 경비실 열쇠함에, 하나는 내가 갖고 있다. 내 열쇠는 오늘 내내 가방에 있었다.",
+      "facts": []
+    },
+    {
+      "id": "E6",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T3"
+      },
+      "summary": "오지윤 씨가 큰 박스를 여러 번 하역장으로 옮겼다.",
+      "facts": []
+    },
+    {
+      "id": "E7",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      },
+      "summary": "20:00부터 20:30까지 1층을 순찰했고, 20:30부터 21:00까지는 경비실에서 계속 모니터를 보고 있었다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L5",
+          "start": "20:00",
+          "end": "20:30"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "20:30",
+          "end": "21:00"
+        }
+      ]
+    },
+    {
+      "id": "E8",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T2"
+      },
+      "summary": "열쇠함 비밀번호는 경비원과 학예팀만 안다. 오늘 밤 열쇠함은 열지 않았다.",
+      "facts": []
+    },
+    {
+      "id": "E9",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T3"
+      },
+      "summary": "20:20쯤 모니터로 보니 서하린 학예사가 2층 전시실 앞 복도에서 서성이고 있었다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "20:20",
+          "end": "20:20"
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      },
+      "summary": "로비에서 음식을 내다가 20:35부터 20:40까지 하역장에서 빈 박스를 차에 실었다. 그 뒤 로비로 돌아왔다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "19:00",
+          "end": "20:35"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:35",
+          "end": "20:40"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "20:45",
+          "end": "21:00"
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T2"
+      },
+      "summary": "전시실에는 들어갈 수 없다. 내 출입증은 로비와 하역장만 열린다.",
+      "facts": []
+    },
+    {
+      "id": "E12",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T3"
+      },
+      "summary": "학예사님이 리셉션 중간에 한동안 안 보였다.",
+      "facts": []
+    },
+    {
+      "id": "E13",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T4"
+      },
+      "summary": "20:40쯤 반출 확인서에 서명하던 경비원이 허리에 열쇠 꾸러미를 차고 있었다. 내가 하역장을 떠날 때 그 경비원은 직원 통로 쪽으로 걸어갔다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "20:40",
+          "end": "20:41"
+        }
+      ]
+    },
+    {
+      "id": "E14",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "19:00-20:00"
+      },
+      "summary": "19:00 리셉션 시작, 서하린이 손님을 맞음. 19:20 문태오가 로비를 지나감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "19:00",
+          "end": "19:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L5",
+          "start": "19:20",
+          "end": "19:20"
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:05 문태오가 로비를 지나 1층 안쪽으로 순찰. 20:13 서하린이 계단으로 올라감. 20:26 서하린이 내려와 21:00까지 로비에서 손님을 응대하는 모습이 계속 보임. 20:45 오지윤이 로비로 돌아옴.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L5",
+          "start": "20:05",
+          "end": "20:05"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "20:13",
+          "end": "20:13"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "20:26",
+          "end": "21:00"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "20:45",
+          "end": "20:45"
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:00 리셉션 종료, 손님 퇴장. 21:28 서하린이 계단으로 올라감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "21:00",
+          "end": "21:28"
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:15 서하린이 복도를 지나 학예실로 들어감. 20:23 안내 책자 상자를 들고 학예실에서 나와 계단으로 내려감. 이 시간대 내내 2전시실 정문은 닫혀 있고 출입한 사람 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "20:15",
+          "end": "20:15"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "20:23",
+          "end": "20:23"
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:31 서하린이 2전시실 정문을 열고 들어감. 21:33 급히 나와 무전으로 연락.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "21:31",
+          "end": "21:31"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "21:33",
+          "end": "21:33"
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:35~20:40 오지윤이 카트로 큰 보온박스 여러 개를 케이터링 차량에 실음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:35",
+          "end": "20:40"
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:44 열쇠 꾸러미를 허리에 찬 문태오가 직원 통로 입구로 들어감(근접 화면으로 얼굴 식별). 20:56 빈손으로 같은 입구에서 나와 경비실 방향으로 감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "20:44",
+          "end": "20:44"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "20:56",
+          "end": "20:56"
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S1"
+      },
+      "summary": "학예실 출입 기록: 20:16 입실, 20:22 퇴실. 그 외 2층 보안 구역 출입 기록 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L7",
+          "start": "20:16",
+          "end": "20:22"
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S2"
+      },
+      "summary": "경비 근무 기록(문태오): 20:00~20:30 1층 순찰 서명, 20:30~21:00 경비실 근무. 봉인 스티커 사용 대장에 20:31 SG-0392 1매 사용, 사용 목적 공란, 서명 문태오. 무전 기록상 20:46, 20:52 로비의 호출에 응답 없음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "20:31",
+          "end": "20:31"
+        }
+      ]
+    },
+    {
+      "id": "E23",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S3"
+      },
+      "summary": "케이터링 출입증: 18:30 하역장 입장. 반출 확인서 20:40: 빈 보온박스 6개·카트 1대, 경비 문태오 확인 서명.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "18:30",
+          "end": "18:30"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "20:40",
+          "end": "20:40"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L6",
+          "start": "20:40",
+          "end": "20:40"
+        }
+      ]
+    }
+  ]
+}

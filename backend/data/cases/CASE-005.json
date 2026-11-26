@@ -1,0 +1,604 @@
+{
+  "case_id": "CASE-005",
+  "version": 1,
+  "title": "공연장 소품 교체 사건",
+  "difficulty": "challenge",
+  "summary": "공연이 끝난 뒤, 소품으로 빌려 온 진품 회중시계가 모조품으로 바뀌어 있었다.",
+  "introduction": "극단 해무의 연극 〈마지막 왈츠〉에는 소장가 윤정례에게 빌린 1931년산 은제 회중시계가 소품으로 쓰였다. 오늘 밤 공연이 끝난 21:45, 시계를 돌려받은 소장가 측이 시계 뒷면에 있어야 할 각인이 없고 뚜껑 안쪽에 연습용 모조 시계의 소품 번호 스티커 'P-14B'가 붙어 있는 것을 발견했다. 공연 시간표는 1막 19:30~20:20, 인터미션 20:20~20:35, 2막 20:35~21:35였다. 공연 중 무대 뒤에서 시계를 다룰 수 있었던 사람은 세 명이다.",
+  "off_site_label": "극장 밖",
+  "tool_budget": 10,
+  "suspects": [
+    {
+      "id": "S1",
+      "name": "하도경",
+      "role": "소품 담당",
+      "description": "공연 중 무대 뒤 소품 테이블과 소품 창고를 관리한다."
+    },
+    {
+      "id": "S2",
+      "name": "연서우",
+      "role": "주연 배우",
+      "description": "1막과 2막에서 회중시계를 직접 쓰는 배역을 맡았다."
+    },
+    {
+      "id": "S3",
+      "name": "차이준",
+      "role": "무대감독",
+      "description": "공연 큐 진행과 무대 전환을 지휘한다."
+    }
+  ],
+  "locations": [
+    {
+      "id": "L1",
+      "name": "무대 뒤 윙",
+      "description": "소품 테이블과 시계 트레이가 있고 무대와 바로 이어짐"
+    },
+    {
+      "id": "L2",
+      "name": "소품 창고",
+      "description": "철망 문으로 잠김"
+    },
+    {
+      "id": "L3",
+      "name": "무대",
+      "description": "무대감독 콘솔이 무대 오른쪽 끝에 있음"
+    },
+    {
+      "id": "L4",
+      "name": "분장실",
+      "description": "배우 분장과 대기"
+    },
+    {
+      "id": "L5",
+      "name": "백스테이지 복도",
+      "description": "윙·소품 창고·분장실·무대 오른쪽 출입구로 이어짐"
+    },
+    {
+      "id": "L6",
+      "name": "로비"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "C1",
+      "name": "백스테이지 복도 카메라",
+      "description": "소품 창고 철망 문과 분장실 문이 보임",
+      "location_id": "L5",
+      "time_windows": [
+        "19:00-20:00",
+        "20:00-21:00",
+        "21:00-22:00"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "윙 카메라",
+      "description": "윙 출입문 위 근접 설치. 무대 쪽 진입로도 보이고, 소품 테이블은 커튼에 가려 보이지 않음",
+      "location_id": "L1",
+      "time_windows": [
+        "19:00-20:00",
+        "20:00-21:00",
+        "21:00-22:00"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "로비 카메라",
+      "location_id": "L6",
+      "time_windows": [
+        "19:00-20:00",
+        "20:00-21:00",
+        "21:00-22:00"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "T1",
+      "name": "인터미션 동선"
+    },
+    {
+      "id": "T2",
+      "name": "시계와 소품 관리"
+    },
+    {
+      "id": "T3",
+      "name": "다른 사람에 대해"
+    },
+    {
+      "id": "T4",
+      "name": "목격한 것"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L1"
+      },
+      "summary": "시계 트레이는 소품 테이블 위 커튼 뒤에 있다. 트레이 기록표: 19:10 '진품 시계 비치' 하도경, 19:29 '시계 수령' 연서우, 20:21 '시계 반납' 연서우, 20:34 '시계 확인' 하도경, 21:38 '시계 반납' 연서우.",
+      "facts": []
+    },
+    {
+      "id": "E2",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L2"
+      },
+      "summary": "철망 문 자물쇠에 손상 없음(열쇠로 열린 것으로 보임). 소품 반출 대장에 '20:24 P-14B 모조 회중시계 반출, 사유: 2막 예비'라고 적혀 있고, 서명란에 '하도경'이라는 이름이 손글씨로 적혀 있음. 반납 기록은 없고 P-14B 보관 칸은 비어 있음. 열쇠 관리 대장: 창고 열쇠는 소품 담당과 무대감독에게 하나씩 지급되어 있고, 오늘 분실 신고나 대여 기록은 없음.",
+      "facts": []
+    },
+    {
+      "id": "E3",
+      "source_tool": "inspect_scene",
+      "locator": {
+        "location_id": "L4"
+      },
+      "summary": "분장대 위에 부채 수리용 접착제와 부러진 부챗살 조각이 있음. 분장실 출입문은 복도 쪽 하나뿐.",
+      "facts": []
+    },
+    {
+      "id": "E4",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T1"
+      },
+      "summary": "인터미션 동안 윙의 소품 테이블에서 2막 소품을 준비했다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "20:20",
+          "end": "20:35"
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T2"
+      },
+      "summary": "시계는 공연 중 트레이에만 둔다. 모조품 P-14B는 연습 때만 쓰고 공연 날에는 창고에 둔다. 창고 열쇠는 나와 차이준 씨만 갖고 있다.",
+      "facts": []
+    },
+    {
+      "id": "E6",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T3"
+      },
+      "summary": "차이준 씨가 요즘 골동품 시계 시세를 자주 물어봤다.",
+      "facts": []
+    },
+    {
+      "id": "E7",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S1",
+        "topic_id": "T4"
+      },
+      "summary": "20:34에 트레이의 시계를 확인했을 때 겉모습은 평소와 같았다. 2막 직전이라 뚜껑 안쪽까지는 보지 않았다.",
+      "facts": []
+    },
+    {
+      "id": "E8",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T1"
+      },
+      "summary": "20:21에 시계를 트레이에 반납했다. 그 뒤 20:22부터 20:32까지 분장실에서 2막 분장을 고쳤다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "20:21",
+          "end": "20:21"
+        },
+        {
+          "kind": "claim",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "20:22",
+          "end": "20:32"
+        }
+      ]
+    },
+    {
+      "id": "E9",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T2"
+      },
+      "summary": "시계는 공연 직전에 트레이에서 받아 가고, 쓰고 나면 트레이에 돌려놓는다. 나는 창고 열쇠가 없다.",
+      "facts": []
+    },
+    {
+      "id": "E10",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T3"
+      },
+      "summary": "인터미션 때 하도경 씨가 분장실에서 내 2막 부채를 고쳐 줬다. 20:25쯤에는 분장실에 있었다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L4",
+          "start": "20:25",
+          "end": "20:25"
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S2",
+        "topic_id": "T4"
+      },
+      "summary": "2막에서 시계 뚜껑을 열었을 때 1막 때보다 가볍게 느껴졌다. 공연 중이라 그냥 넘어갔다.",
+      "facts": []
+    },
+    {
+      "id": "E12",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T1"
+      },
+      "summary": "인터미션 내내 무대에서 2막 세트 전환을 지휘했다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S3",
+          "place": "L3",
+          "start": "20:20",
+          "end": "20:35"
+        }
+      ]
+    },
+    {
+      "id": "E13",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T2"
+      },
+      "summary": "창고 열쇠는 나도 하나 갖고 있지만 오늘은 쓰지 않았다. 반출 대장은 소품 담당이 쓴다.",
+      "facts": []
+    },
+    {
+      "id": "E14",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T3"
+      },
+      "summary": "하도경 씨는 공연 중에도 가끔 자리를 비운다.",
+      "facts": []
+    },
+    {
+      "id": "E15",
+      "source_tool": "interview_suspect",
+      "locator": {
+        "suspect_id": "S3",
+        "topic_id": "T4"
+      },
+      "summary": "20:24쯤 하도경 씨가 소품 창고에서 작은 상자를 들고 나오는 걸 봤다.",
+      "facts": [
+        {
+          "kind": "claim",
+          "person_id": "S1",
+          "place": "L2",
+          "start": "20:24",
+          "end": "20:24"
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "19:00-20:00"
+      },
+      "summary": "19:05 하도경이 열쇠로 소품 창고를 열고 들어감. 19:08 나와 윙 쪽으로 감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "19:05",
+          "end": "19:05"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "19:08",
+          "end": "19:08"
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:22 연서우가 분장실로 들어감. 20:23 하도경이 부러진 부채를 들고 분장실로 들어감. 20:24 검은 작업복에 검은 모자를 쓴 인물이 열쇠로 소품 창고 철망 문을 열고 들어감(모자 챙에 가려 얼굴은 보이지 않음). 20:25 그 인물이 손바닥만 한 검은 상자를 들고 나와 윙 쪽으로 감. 20:30 하도경이 분장실에서 나와 윙 쪽으로 감. 20:32 연서우가 분장실에서 나와 윙 쪽으로 감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L5",
+          "start": "20:22",
+          "end": "20:22"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "20:23",
+          "end": "20:23"
+        },
+        {
+          "kind": "record",
+          "person_id": null,
+          "place": "L5",
+          "start": "20:24",
+          "end": "20:24"
+        },
+        {
+          "kind": "record",
+          "person_id": null,
+          "place": "L5",
+          "start": "20:25",
+          "end": "20:25"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "20:30",
+          "end": "20:30"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L5",
+          "start": "20:32",
+          "end": "20:32"
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C1",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:41 하도경이 시계 케이스를 들고 로비 쪽으로 감. 21:51 차이준이 큰 백팩을 메고 로비 쪽으로 감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L5",
+          "start": "21:41",
+          "end": "21:41"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L5",
+          "start": "21:51",
+          "end": "21:51"
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "19:00-20:00"
+      },
+      "summary": "19:10 하도경이 출입문으로 들어옴. 19:28 연서우가 출입문으로 들어옴. 19:30 연서우가 무대 쪽으로 나감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "19:10",
+          "end": "19:10"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "19:28",
+          "end": "19:28"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "19:30",
+          "end": "19:30"
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "20:00-21:00"
+      },
+      "summary": "20:19 연서우가 무대 쪽에서 들어옴. 20:21 연서우가 출입문으로 나감. 20:22 하도경이 부러진 부채를 들고 출입문으로 나감. 20:26 검은 모자를 쓴 차이준이 출입문으로 들어옴(근접 화면으로 얼굴 식별). 20:29 차이준이 무대 쪽으로 나감. 20:31 하도경이 출입문으로 들어옴. 20:33 연서우가 출입문으로 들어옴. 20:22 이후 20:31 하도경이 돌아오기 전까지 윙에 들어간 사람은 차이준뿐. 소품 테이블은 커튼에 가려 보이지 않음.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "20:19",
+          "end": "20:19"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "20:21",
+          "end": "20:21"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "20:22",
+          "end": "20:22"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L1",
+          "start": "20:26",
+          "end": "20:26"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L1",
+          "start": "20:29",
+          "end": "20:29"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "20:31",
+          "end": "20:31"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "20:33",
+          "end": "20:33"
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C2",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:36 연서우가 무대 쪽에서 들어옴. 21:39 연서우가 출입문으로 나감. 21:40 하도경이 시계 케이스를 들고 출입문으로 나감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "21:36",
+          "end": "21:36"
+        },
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L1",
+          "start": "21:39",
+          "end": "21:39"
+        },
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L1",
+          "start": "21:40",
+          "end": "21:40"
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "source_tool": "check_cctv",
+      "locator": {
+        "camera_id": "C3",
+        "time_window": "21:00-22:00"
+      },
+      "summary": "21:42 하도경이 로비에서 소장가 측에 시계 케이스를 건넴. 21:52 차이준이 큰 백팩을 메고 정문으로 나감.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L6",
+          "start": "21:42",
+          "end": "21:42"
+        },
+        {
+          "kind": "record",
+          "person_id": "S3",
+          "place": "L6",
+          "start": "21:52",
+          "end": "21:52"
+        }
+      ]
+    },
+    {
+      "id": "E23",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S1"
+      },
+      "summary": "공연 전 소품 점검표(하도경): 19:06 P-14B 창고 보관 확인, 19:10 진품 시계 트레이 비치. 소품 수리 기록: 20:24 2막 부채 수리 시작, 20:29 완료, 장소 분장실. 분장 담당 오세라 확인란: '20:24부터 20:29까지 분장실에서 수리하는 것을 옆에서 봄.'",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S1",
+          "place": "L4",
+          "start": "20:24",
+          "end": "20:29"
+        }
+      ]
+    },
+    {
+      "id": "E24",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S2"
+      },
+      "summary": "분장 기록표(연서우): 20:23~20:31 2막 분장 수정, 담당 오세라. 창고 열쇠 지급 대상 아님.",
+      "facts": [
+        {
+          "kind": "record",
+          "person_id": "S2",
+          "place": "L4",
+          "start": "20:23",
+          "end": "20:31"
+        }
+      ]
+    },
+    {
+      "id": "E25",
+      "source_tool": "verify_alibi",
+      "locator": {
+        "suspect_id": "S3"
+      },
+      "summary": "무대감독 콘솔 기록(차이준 계정): 20:20 인터미션 큐, 20:33 2막 준비 큐 입력. 그 사이 입력 없음. 세트 크루 무전 기록: 20:25, 20:28 무대감독 호출에 응답 없음.",
+      "facts": []
+    }
+  ]
+}
