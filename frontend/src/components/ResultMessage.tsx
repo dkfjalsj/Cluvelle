@@ -7,6 +7,8 @@ interface ResultMessageProps {
   pick: SuspectPick;
   // 고른 시점의 공개 단계 수
   pickedAtStep: number;
+  // AI 수사관이 실제로 조사한 횟수
+  aiToolCallCount: number;
   // 실제 범인 ID
   culpritId: string;
   // 실제 범인 이름
@@ -50,32 +52,41 @@ function withWasEnding(word: string): string {
 }
 
 // 맞힌 경우 제목
-// 범인을 고른 시점의 공개 단계 수 구간에 맞는 축하 제목을 반환하는 함수
-function correctTitle(steps: number): string {
-  // 단계 구간별 제목
-  if (steps === 0) return "🎉 단서 없이 범인을 맞혔어요! 직감이 대단해요.";
-  if (steps <= 3)
-    return `🎉 단 ${steps}단계 만에 범인을 찾아냈어요! 명탐정이시네요.`;
-  if (steps <= 7) return `🎉 ${steps}단계 만에 범인을 맞혔어요!`;
-  return "🎉 끝까지 단서를 따라가 범인을 맞혔어요!";
+// 범인을 고른 시점의 공개 단계 수(n)를 AI 수사관의 조사 횟수(T)와 비교해 축하 제목을 반환하는 함수
+function correctTitle(steps: number, aiCalls: number): string {
+  // 단서를 보기 전 / AI 수사관보다 먼저 / 끝까지 함께
+  if (steps === 0)
+    return "🎉 단서를 보기도 전에 범인을 맞혔어요! 직감이 대단해요.";
+  if (steps < aiCalls)
+    return `🎉 AI 수사관보다 먼저, ${steps}단계 만에 범인을 찾아냈어요!`;
+  return "🎉 AI 수사관과 함께 끝까지 단서를 따라가 범인을 맞혔어요!";
 }
 
-// AI 비교 문구
-// AI 채점 판정에 맞춰 AI 결과와 비교한 한 줄을 반환하는 함수 (오류면 null)
+// AI 수사관 비교 문구
+// AI 수사관의 판정과 조사 횟수에 맞춰 AI 수사관 결과와 비교한 한 줄을 반환하는 함수 (오류면 null)
 function aiComparison(
   verdict: GradingVerdict,
   culpritName: string,
+  steps: number,
+  aiCalls: number,
 ): string | null {
   // 판정별 문구
   switch (verdict) {
     case "full_success":
+      // 사용자가 먼저 맞혔으면 AI 수사관의 조사 횟수 강조
+      return steps < aiCalls
+        ? `AI 수사관은 ${aiCalls}번 조사한 끝에 같은 결론을 냈어요.`
+        : `AI 수사관도 ${withObjectParticle(culpritName)} 지목했어요.`;
     case "partial_success":
-      return `AI도 ${withObjectParticle(culpritName)} 지목했어요.`;
+      return `AI 수사관도 ${withObjectParticle(culpritName)} 지목했지만, 결정적인 단서를 다 찾지는 못했어요.`;
     case "appropriate_withhold":
+      // 증거가 부족해 미룬 경우
+      return "AI 수사관은 증거가 부족하다며 판단을 미뤘는데, 당신은 범인을 찾아냈어요. 정말 대단해요!";
     case "inappropriate_withhold":
-      return "AI는 판단을 보류했지만, 당신은 범인을 찾아냈어요!";
+      // 단서를 다 찾고도 미룬 경우
+      return "AI 수사관은 단서를 다 찾고도 판단을 미뤘는데, 당신은 범인을 맞혔어요. 정말 대단해요!";
     case "failure":
-      return "AI는 다른 사람을 지목했어요. AI보다 한 수 위예요!";
+      return "AI 수사관은 다른 사람을 지목했어요. AI 수사관보다 한 수 위예요!";
     default:
       // 오류는 덧붙이지 않음
       return null;
@@ -83,10 +94,11 @@ function aiComparison(
 }
 
 // 결과 메시지 카드
-// 맞힘(단계 구간·AI 비교)·틀림·모르겠어요에 맞는 축하·안내 문구를 카드로 보여 주는 컴포넌트
+// 맞힘(AI 수사관보다 먼저인지·AI 수사관 비교)·틀림·모르겠어요에 맞는 축하·안내 문구를 카드로 보여 주는 컴포넌트
 export function ResultMessage({
   pick,
   pickedAtStep,
+  aiToolCallCount,
   culpritId,
   culpritName,
   aiVerdict,
@@ -98,14 +110,20 @@ export function ResultMessage({
   let title: string;
   let detail: string | null;
   if (correct) {
-    title = correctTitle(pickedAtStep);
-    detail = aiComparison(aiVerdict, culpritName);
+    title = correctTitle(pickedAtStep, aiToolCallCount);
+    detail = aiComparison(
+      aiVerdict,
+      culpritName,
+      pickedAtStep,
+      aiToolCallCount,
+    );
   } else if (unknown) {
     title = `정답은 ${withWasEnding(culpritName)}.`;
-    detail = "단서를 다시 보며 범인을 찾아가는 과정을 확인해 보세요.";
+    detail =
+      "단서를 다시 보며 AI 수사관이 범인을 찾아가는 과정을 확인해 보세요.";
   } else {
     title = `아쉬워요. 범인은 ${withWasEnding(culpritName)}.`;
-    detail = "남은 단서를 다시 보면 어디서 갈렸는지 확인할 수 있어요.";
+    detail = "단서를 다시 보면 어디서 갈렸는지 확인할 수 있어요.";
   }
   // 맞히면 강조 카드, 아니면 기본 카드
   const cardClass = correct

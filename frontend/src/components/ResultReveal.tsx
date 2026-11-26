@@ -50,7 +50,7 @@ function VerdictCard({ verdict }: { verdict: GradingVerdict }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
       {/* 제목 */}
-      <p className="font-semibold">AI 판정: {label.title}</p>
+      <p className="font-semibold">AI 수사관 판정: {label.title}</p>
       {/* 설명 */}
       <p className="mt-1 text-sm text-slate-300">{label.description}</p>
     </div>
@@ -106,6 +106,7 @@ export function ResultReveal({
         <ResultMessage
           pick={pick}
           pickedAtStep={pickedAtStep}
+          aiToolCallCount={result.tool_call_count}
           culpritId={grading.culprit_id}
           culpritName={grading.culprit_name}
           aiVerdict={grading.verdict}
@@ -114,7 +115,7 @@ export function ResultReveal({
       {/* 비교 카드 3칸 */}
       <div className="grid gap-2 sm:grid-cols-3">
         <CompareCell title="내 선택" value={myPick} note={pickNote} />
-        <CompareCell title="AI의 결론" value={aiConclusion} />
+        <CompareCell title="AI 수사관의 결론" value={aiConclusion} />
         <CompareCell title="실제 범인" value={culprit} />
       </div>
       {/* AI 판정 카드 */}

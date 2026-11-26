@@ -98,8 +98,6 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
   const [guideOpen, setGuideOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [caseInfoOpen, setCaseInfoOpen] = useState(false);
-  // 이 화면에서 방금 범인을 확정했는지 (확정 직후 이동은 기록을 남김)
-  const [pickedHere, setPickedHere] = useState(false);
   // 저장되는 진행 상태
   const [progress, updateProgress] = useStoredProgress(investigationId);
   // 주소의 다시 보기 표시 (?review=1)
@@ -117,9 +115,9 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
   // 결과 화면 주소
   const resultPath = `/investigations/${investigationId}/result`;
 
-  // 이미 골랐는데 다시 보기 모드가 아니면 결과 화면으로 이동 (방금 확정했을 때만 기록 남김)
+  // 골랐는데 다시 보기 모드가 아니면 결과 화면으로 이동 (확정 직후에도 기록을 바꿔치기)
   if (picked && !reviewMode) {
-    return <Navigate to={resultPath} replace={!pickedHere} />;
+    return <Navigate to={resultPath} replace />;
   }
 
   // 기록 없음 안내
@@ -181,8 +179,6 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
     // 선택 저장 (이후 변경 불가)
     updateProgress({ pickedSuspect: pick, pickedAtStep: revealedCount });
     setPickerOpen(false);
-    // 방금 확정 표시 (다음 그리기에서 결과 화면으로 이동)
-    setPickedHere(true);
   }
 
   // 안내문 닫기
@@ -226,13 +222,13 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
               범인 고르기
             </button>
           </div>
-          <p className="text-sm text-slate-400">AI가 조사 중이에요…</p>
+          <p className="text-sm text-slate-400">AI 수사관이 조사 중이에요…</p>
         </div>
       ) : (
         !aiFailed && (
           <div className="space-y-2">
             <p className="text-sm text-slate-300">
-              AI의 조사는 여기까지예요. 범인을 골라 주세요.
+              AI 수사관의 조사는 여기까지예요. 범인을 골라 주세요.
             </p>
             <button
               type="button"
@@ -258,7 +254,7 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
   // 0단계 안내
   const emptyNotice = revealed.length === 0 && (
     <p className="text-sm text-slate-400">
-      아직 공개한 단계가 없어요. &apos;다음&apos;을 눌러 AI의 첫 조사를
+      아직 공개한 단계가 없어요. &apos;다음&apos;을 눌러 AI 수사관의 첫 조사를
       확인하세요.
     </p>
   );
@@ -266,7 +262,9 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
   // 오류 안내 (숨기지 않음)
   const failureNotice = aiFailed && (
     <div>
-      <p className="text-sm text-red-400">AI 수사 중 오류가 발생했어요</p>
+      <p className="text-sm text-red-400">
+        AI 수사관의 수사 중 오류가 발생했어요
+      </p>
       <Link to="/" className="mt-2 inline-block text-sky-400 underline">
         사건 목록으로
       </Link>
@@ -312,8 +310,8 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
           {/* 상태·예산·진행 방식 */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-slate-300">
-              {done || aiFailed ? "AI 조사 종료" : "AI 조사 중"} · 남은 예산{" "}
-              {remaining}/{result.tool_budget}
+              {done || aiFailed ? "AI 수사관 조사 종료" : "AI 수사관 조사 중"} ·
+              남은 예산 {remaining}/{result.tool_budget}
             </p>
             {!reviewMode && progress.guideClosed && !guideOpen && (
               <button

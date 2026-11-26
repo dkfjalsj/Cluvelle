@@ -20,7 +20,7 @@ export function GradingView({ grading }: GradingViewProps) {
   return (
     <div className="rounded-lg border border-amber-700 bg-slate-900 p-4 text-sm">
       {/* 제목 */}
-      <p className="text-lg font-semibold">AI 수사 돌아보기</p>
+      <p className="text-lg font-semibold">AI 수사관의 수사 돌아보기</p>
       {/* 결정적인 단서별 상태 */}
       <div className="mt-3">
         <p className="font-medium text-slate-300">
@@ -40,7 +40,7 @@ export function GradingView({ grading }: GradingViewProps) {
       </div>
       {/* 조사 횟수와 가장 빠른 풀이 */}
       <p className="mt-3 text-slate-300">
-        AI는 {grading.tool_call_count}번 조사했어요. 가장 빠른 풀이는{" "}
+        AI 수사관은 {grading.tool_call_count}번 조사했어요. 가장 빠른 풀이는{" "}
         {grading.solution_path_length}번이에요.
       </p>
       {/* 사건 해설 */}

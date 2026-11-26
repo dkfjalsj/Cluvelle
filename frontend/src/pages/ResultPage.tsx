@@ -105,7 +105,7 @@ function ResultView({ investigationId }: ResultViewProps) {
           // 대기 안내와 연결 상태
           <div className="space-y-3">
             <p className="text-sm text-amber-300">
-              AI 수사가 끝나면 정답을 공개해요
+              AI 수사관의 수사가 끝나면 정답을 공개해요
             </p>
             {!done && connection === "reconnecting" && (
               <p className="text-sm text-amber-300">
