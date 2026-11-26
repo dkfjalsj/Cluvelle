@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { PageContainer } from "../components/PageContainer";
+import { CaseDetailSkeleton } from "../components/Skeletons";
 import { DIFFICULTY_LABELS } from "../labels";
 import { ApiError, fetchCase, startInvestigation } from "../services/api";
 import type { PublicCase } from "../types/api";
@@ -102,9 +103,10 @@ export function CaseDetailPage() {
 
       {/* 불러오는 중 */}
       {!publicCase && !loadError && (
-        <p className="mt-6 text-sm text-slate-300">
-          사건 정보를 불러오는 중...
-        </p>
+        <div className="mt-6">
+          <p className="text-sm text-slate-300">사건 정보를 불러오는 중...</p>
+          <CaseDetailSkeleton />
+        </div>
       )}
 
       {publicCase && (

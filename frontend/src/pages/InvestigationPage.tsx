@@ -1,24 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 
+import { CaseInfo } from "../components/CaseInfo";
 import { EvidenceList } from "../components/EvidenceList";
-import { GradingView } from "../components/GradingView";
+import { GuidePanel } from "../components/GuidePanel";
+import { HypothesisLog } from "../components/HypothesisLog";
 import { PageContainer } from "../components/PageContainer";
-import { ReportView } from "../components/ReportView";
+import { ResultReveal } from "../components/ResultReveal";
+import { SuspectPicker } from "../components/SuspectPicker";
 import { TimelineItem, type TimelineStep } from "../components/TimelineItem";
 import { useInvestigationEvents } from "../hooks/useInvestigationEvents";
-import { STATUS_LABELS } from "../labels";
+import { useStoredProgress } from "../hooks/useStoredProgress";
 import { ApiError, fetchCase, fetchInvestigationResult } from "../services/api";
 import type {
   EvidenceView,
   InvestigationEvent,
   InvestigationResult,
   PublicCase,
-  RunStatus,
 } from "../types/api";
+import type { SuspectPick } from "../types/progress";
 
-// 종료 상태
-const FINISHED_STATUSES: RunStatus[] = ["completed", "inconclusive", "failed"];
+// 공통 버튼 모양
+const PRIMARY_BUTTON =
+  "min-h-11 flex-1 rounded-lg bg-sky-600 px-4 font-semibold hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-700";
+const SECONDARY_BUTTON =
+  "min-h-11 flex-1 rounded-lg bg-slate-700 px-4 font-semibold hover:bg-slate-600";
 
 // 수사 화면
 // 주소의 수사 ID로 수사 보기 화면을 그리며, 수사가 바뀌면 상태를 새로 시작하는 컴포넌트
@@ -51,8 +57,9 @@ function buildTimeline(events: InvestigationEvent[]): TimelineStep[] {
   for (const event of events) {
     if (event.event === "tool_selected")
       stepOf(event.data.step).selected = event.data;
-    if (event.event === "hypothesis_updated")
+    if (event.event === "hypothesis_updated") {
       stepOf(event.data.step).hypothesis = event.data.hypothesis;
+    }
     if (event.event === "evidence_found")
       stepOf(event.data.step).found = event.data;
   }
@@ -61,14 +68,13 @@ function buildTimeline(events: InvestigationEvent[]): TimelineStep[] {
 }
 
 // 확보 증거 모으기
-// 결과 이벤트들의 증거를 처음 나온 순서대로 중복 없이 모으는 함수
-function collectEvidence(events: InvestigationEvent[]): EvidenceView[] {
+// 주어진 단계들의 결과 증거를 처음 나온 순서대로 중복 없이 모으는 함수
+function collectEvidence(steps: TimelineStep[]): EvidenceView[] {
   // 증거 ID → 증거
   const collected = new Map<string, EvidenceView>();
-  for (const event of events) {
-    if (event.event !== "evidence_found") continue;
-    for (const item of event.data.evidence) {
-      if (!collected.has(item.id)) collected.set(item.id, item);
+  for (const item of steps) {
+    for (const evidence of item.found?.evidence ?? []) {
+      if (!collected.has(evidence.id)) collected.set(evidence.id, evidence);
     }
   }
   // 목록 반환
@@ -82,14 +88,19 @@ interface InvestigationViewProps {
 }
 
 // 수사 보기
-// 결과·사건 정보를 불러오고 이벤트 스트림으로 실시간 타임라인을 그린 뒤 종료 후 보고서·정답을 보여 주는 컴포넌트
+// AI 조사를 한 단계씩 공개하고, 사용자가 범인을 고른 뒤 AI 수사가 끝나면 결론과 정답을 보여 주는 컴포넌트
 function InvestigationView({ investigationId }: InvestigationViewProps) {
-  // 수사 결과, 공개 사건 정보, 기록 없음, 불러오기 오류, 정답 보기 여부
+  // 수사 결과, 공개 사건 정보, 기록 없음, 불러오기 오류
   const [result, setResult] = useState<InvestigationResult | null>(null);
   const [publicCase, setPublicCase] = useState<PublicCase | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [showGrading, setShowGrading] = useState(false);
+  // 화면 상태: 안내문 다시 보기, 범인 고르기 패널, 모바일 사건 정보 펼침
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [caseInfoOpen, setCaseInfoOpen] = useState(false);
+  // 저장되는 진행 상태
+  const [progress, updateProgress] = useStoredProgress(investigationId);
 
   // 처음에 결과 → 사건 정보 순서로 불러오기
   useEffect(() => {
@@ -127,7 +138,7 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
     result ? investigationId : null,
   );
 
-  // 마지막 이벤트를 받으면 결과를 다시 조회해 보고서·채점 반영
+  // 마지막 이벤트를 받으면 결과를 다시 조회 (화면에는 범인을 고른 뒤에만 사용)
   useEffect(() => {
     // 끝나지 않았으면 무시
     if (!done) return;
@@ -151,22 +162,11 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
     };
   }, [done, investigationId]);
 
-  // 이벤트로 만든 타임라인·확보 증거·현재 가설·남은 예산·스트림 오류
-  const timeline = useMemo(() => buildTimeline(events), [events]);
-  const evidence = useMemo(() => collectEvidence(events), [events]);
-  const currentHypothesis = useMemo(() => {
-    const updates = events.filter(
-      (event) => event.event === "hypothesis_updated",
-    );
-    const last = updates[updates.length - 1];
-    return last && last.event === "hypothesis_updated"
-      ? last.data.hypothesis
-      : null;
-  }, [events]);
-  const lastFound = [...events]
-    .reverse()
-    .find((event) => event.event === "evidence_found");
-  const streamError = events.find((event) => event.event === "error");
+  // 단계 묶기: 결과까지 도착한 단계만 완성된 단계
+  const completedSteps = useMemo(
+    () => buildTimeline(events).filter((item) => item.found),
+    [events],
+  );
 
   // 기록 없음 안내
   if (notFound) {
@@ -195,141 +195,316 @@ function InvestigationView({ investigationId }: InvestigationViewProps) {
     );
   }
 
-  // 종료 여부와 진행 상태 표시
-  const finished = FINISHED_STATUSES.includes(result.status);
-  const disconnected = connection === "reconnecting" || connection === "failed";
-  const statusText = finished
-    ? STATUS_LABELS[result.status]
-    : disconnected
-      ? "연결 끊김"
-      : "진행 중";
-  // 남은 예산 (마지막 결과 이벤트 기준, 없으면 결과 기준)
-  const remaining =
-    lastFound && lastFound.event === "evidence_found"
-      ? lastFound.data.remaining_budget
-      : result.tool_budget - result.tool_call_count;
+  // 공개 단계: 저장된 수와 완성된 단계 수 중 작은 값까지만
+  const revealedCount = Math.min(progress.revealedSteps, completedSteps.length);
+  const revealed = completedSteps.slice(0, revealedCount);
+  const current = revealed[revealed.length - 1];
+  const previous = revealed.slice(0, -1);
+  const evidence = collectEvidence(revealed);
+  // 남은 예산: 마지막 공개 단계 기준 (0단계는 전체)
+  const remaining = current?.found?.remaining_budget ?? result.tool_budget;
+  // AI 조사 종료·오류 여부 (오류는 숨기지 않음)
+  const aiFailed =
+    events.some((event) => event.event === "error") ||
+    (done && result.status === "failed");
+  // 범인 선택 여부와 결과 공개 조건
+  const picked = progress.pickedSuspect !== null;
+  const canReveal =
+    picked &&
+    done &&
+    !aiFailed &&
+    (result.status === "completed" || result.status === "inconclusive");
+  // 안내문 표시 여부 (처음이거나 다시 열었을 때)
+  const showGuide = !progress.guideClosed || guideOpen;
+  // 다음 단계가 있는지
+  const hasNext = revealedCount < completedSteps.length;
+
+  // 다음 단계 공개
+  // 공개 단계 수를 하나 늘려 저장하는 함수
+  function revealNext() {
+    // 현재 공개 수 + 1
+    updateProgress({ revealedSteps: revealedCount + 1 });
+  }
+
+  // 범인 확정
+  // 고른 값과 고른 시점의 공개 단계 수를 저장하고 고르기 패널을 닫는 함수
+  function confirmPick(pick: SuspectPick) {
+    // 선택 저장 (이후 변경 불가)
+    updateProgress({ pickedSuspect: pick, pickedAtStep: revealedCount });
+    setPickerOpen(false);
+  }
+
+  // 안내문 닫기
+  // 처음 안내문이면 닫음 여부를 저장하고, 다시 연 안내문이면 화면에서만 닫는 함수
+  function closeGuide() {
+    // 닫음 저장 후 다시 보기 상태 해제
+    updateProgress({ guideClosed: true });
+    setGuideOpen(false);
+  }
+
+  // 단계 조작 영역 (다음·범인 고르기·안내 문구)
+  const controls = !picked && (
+    <div className="space-y-3">
+      {/* 다음 / 조사 중 / 조사 끝 안내 */}
+      {hasNext ? (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button type="button" onClick={revealNext} className={PRIMARY_BUTTON}>
+            다음
+          </button>
+          {!aiFailed && (
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className={SECONDARY_BUTTON}
+            >
+              범인 고르기
+            </button>
+          )}
+        </div>
+      ) : !done && !aiFailed ? (
+        <div className="space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button type="button" disabled className={PRIMARY_BUTTON}>
+              다음
+            </button>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className={SECONDARY_BUTTON}
+            >
+              범인 고르기
+            </button>
+          </div>
+          <p className="text-sm text-slate-400">AI가 조사 중이에요…</p>
+        </div>
+      ) : (
+        !aiFailed && (
+          <div className="space-y-2">
+            <p className="text-sm text-slate-300">
+              AI의 조사는 여기까지예요. 범인을 골라 주세요.
+            </p>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className={`${SECONDARY_BUTTON} w-full`}
+            >
+              범인 고르기
+            </button>
+          </div>
+        )
+      )}
+      {/* 범인 고르기 패널 */}
+      {pickerOpen && !aiFailed && publicCase && (
+        <SuspectPicker
+          suspects={publicCase.suspects}
+          onConfirm={confirmPick}
+          onCancel={() => setPickerOpen(false)}
+        />
+      )}
+    </div>
+  );
+
+  // 0단계 안내
+  const emptyNotice = revealed.length === 0 && (
+    <p className="text-sm text-slate-400">
+      아직 공개한 단계가 없어요. &apos;다음&apos;을 눌러 AI의 첫 조사를
+      확인하세요.
+    </p>
+  );
+
+  // 오류 안내 (숨기지 않음)
+  const failureNotice = aiFailed && (
+    <div>
+      <p className="text-sm text-red-400">AI 수사 중 오류가 발생했어요</p>
+      <Link to="/" className="mt-2 inline-block text-sky-400 underline">
+        사건 목록으로
+      </Link>
+    </div>
+  );
+
+  // 결과 공개 영역 (범인을 고른 뒤)
+  const pickSection = picked && (
+    <section className="space-y-3">
+      {canReveal && progress.pickedSuspect !== null ? (
+        <>
+          <ResultReveal
+            pick={progress.pickedSuspect}
+            pickedAtStep={progress.pickedAtStep ?? 0}
+            result={result}
+            publicCase={publicCase}
+          />
+          {/* 남은 단계 모두 보기 */}
+          {hasNext && (
+            <button
+              type="button"
+              onClick={() =>
+                updateProgress({ revealedSteps: completedSteps.length })
+              }
+              className={`${SECONDARY_BUTTON} w-full`}
+            >
+              남은 조사 단계도 모두 보기
+            </button>
+          )}
+        </>
+      ) : (
+        !aiFailed && (
+          <p className="text-sm text-amber-300">
+            AI 수사가 끝나면 정답을 공개해요
+          </p>
+        )
+      )}
+    </section>
+  );
 
   return (
-    <PageContainer>
-      {/* 상단: 사건 제목·진행 상태·남은 예산 */}
+    <PageContainer wide>
+      {/* 목록으로 가기와 사건 제목 */}
       <Link to="/" className="text-sm text-sky-400 underline">
         ← 사건 목록
       </Link>
-      <h1 className="mt-4 text-2xl font-bold">
+      <h1 className="mt-3 text-2xl font-bold">
         {publicCase?.title ?? result.case_id}
       </h1>
-      <p className="mt-1 text-sm text-slate-300">
-        상태: <span className="font-medium">{statusText}</span> · 남은 예산{" "}
-        {remaining}/{result.tool_budget}
-      </p>
 
-      {/* 연결 끊김 안내와 다시 연결 */}
-      {!finished && connection === "reconnecting" && (
-        <p className="mt-2 text-sm text-amber-300">
-          연결이 끊겨 다시 연결하는 중이에요...
-        </p>
-      )}
-      {!finished && connection === "failed" && (
-        <div className="mt-2">
-          <p className="text-sm text-red-400">서버와 연결하지 못했어요.</p>
-          <button
-            type="button"
-            onClick={reconnect}
-            className="mt-2 min-h-11 rounded-lg bg-slate-700 px-4 text-sm font-medium hover:bg-slate-600"
-          >
-            다시 연결
-          </button>
-        </div>
-      )}
+      <div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-8">
+        {/* PC 왼쪽: 사건 정보·가설 기록 (스크롤 시 고정) */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-6 overflow-y-auto pr-2">
+            {publicCase && <CaseInfo publicCase={publicCase} />}
+            <HypothesisLog steps={revealed} />
+          </div>
+        </aside>
 
-      {/* 현재 가설 */}
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold">현재 가설</h2>
-        <p className="mt-1 text-sm text-amber-200">
-          {currentHypothesis ?? "아직 가설이 없어요."}
-        </p>
-      </section>
+        {/* 오른쪽(모바일은 전체) */}
+        <div className="min-w-0 space-y-6">
+          {/* 상태·예산·진행 방식 */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-slate-300">
+              {done || aiFailed ? "AI 조사 종료" : "AI 조사 중"} · 남은 예산{" "}
+              {remaining}/{result.tool_budget}
+            </p>
+            {progress.guideClosed && !guideOpen && (
+              <button
+                type="button"
+                onClick={() => setGuideOpen(true)}
+                className="min-h-11 rounded-lg border border-slate-700 px-3 text-sm hover:border-slate-500"
+              >
+                진행 방식
+              </button>
+            )}
+          </div>
 
-      {/* 조사 타임라인 */}
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold">조사 타임라인</h2>
-        {timeline.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400">
-            AI 탐정이 첫 조사를 고르는 중이에요...
-          </p>
-        ) : (
-          <ol className="mt-2 space-y-2">
-            {timeline.map((item) => (
-              <TimelineItem
-                key={item.step}
-                item={item}
-                publicCase={publicCase}
-              />
-            ))}
-          </ol>
-        )}
-        {/* 스트림 오류 문장 */}
-        {streamError && streamError.event === "error" && (
-          <p className="mt-2 text-sm text-red-400">
-            {streamError.data.message}
-          </p>
-        )}
-      </section>
-
-      {/* 확보 증거 */}
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold">확보 증거</h2>
-        <div className="mt-2">
-          <EvidenceList items={evidence} />
-        </div>
-      </section>
-
-      {/* 종료 후: 오류·보고서·정답 보기 */}
-      {finished && (
-        <>
-          {result.error && (
-            <p className="mt-6 text-sm text-red-400">{result.error}</p>
+          {/* 연결 끊김 안내와 다시 연결 */}
+          {!done && connection === "reconnecting" && (
+            <p className="text-sm text-amber-300">
+              연결이 끊겨 다시 연결하는 중이에요...
+            </p>
           )}
-          <section className="mt-6">
-            <h2 className="text-lg font-semibold">최종 보고서</h2>
-            <div className="mt-2">
-              {result.final_report ? (
-                <ReportView
-                  report={result.final_report}
-                  reportStatus={result.report_status}
-                  publicCase={publicCase}
-                />
-              ) : (
-                <p className="text-sm text-slate-400">보고서가 없어요.</p>
+          {!done && connection === "failed" && (
+            <div>
+              <p className="text-sm text-red-400">서버와 연결하지 못했어요.</p>
+              <button
+                type="button"
+                onClick={reconnect}
+                className="mt-2 min-h-11 rounded-lg bg-slate-700 px-4 text-sm font-medium hover:bg-slate-600"
+              >
+                다시 연결
+              </button>
+            </div>
+          )}
+
+          {/* 모바일: 사건 정보 접기/펼치기 */}
+          {publicCase && (
+            <div className="lg:hidden">
+              <button
+                type="button"
+                onClick={() => setCaseInfoOpen((open) => !open)}
+                className="min-h-11 w-full rounded-lg border border-slate-700 px-4 text-left text-sm hover:border-slate-500"
+              >
+                {caseInfoOpen ? "사건 정보 접기" : "사건 정보 펼치기"}
+              </button>
+              {caseInfoOpen && (
+                <div className="mt-3">
+                  <CaseInfo publicCase={publicCase} />
+                </div>
               )}
+            </div>
+          )}
+
+          {showGuide ? (
+            // 안내문 (단계 자리)
+            <GuidePanel
+              firstTime={!progress.guideClosed}
+              onClose={closeGuide}
+            />
+          ) : (
+            <>
+              {failureNotice}
+              {/* 모바일: 현재 단계 → 버튼 → 지나온 단계 */}
+              <div className="space-y-4 lg:hidden">
+                {emptyNotice}
+                {current && (
+                  <ul>
+                    <TimelineItem item={current} publicCase={publicCase} />
+                  </ul>
+                )}
+                {controls}
+                {previous.length > 0 && (
+                  <ol className="space-y-2">
+                    {previous.map((item) => (
+                      <TimelineItem
+                        key={item.step}
+                        item={item}
+                        publicCase={publicCase}
+                      />
+                    ))}
+                  </ol>
+                )}
+              </div>
+              {/* PC: 공개한 단계 전부 → 버튼 */}
+              <div className="hidden space-y-4 lg:block">
+                {emptyNotice}
+                {revealed.length > 0 && (
+                  <ol className="space-y-2">
+                    {revealed.map((item) => (
+                      <TimelineItem
+                        key={item.step}
+                        item={item}
+                        publicCase={publicCase}
+                      />
+                    ))}
+                  </ol>
+                )}
+                {controls}
+              </div>
+            </>
+          )}
+
+          {/* 모바일: 가설 기록 */}
+          <div className="lg:hidden">
+            <HypothesisLog steps={revealed} />
+          </div>
+
+          {/* 확보 증거 (공개 단계까지) */}
+          <section>
+            <h2 className="text-lg font-semibold">확보 증거</h2>
+            <div className="mt-2">
+              <EvidenceList items={evidence} />
             </div>
           </section>
 
-          {result.grading && (
-            <section className="mt-6">
-              {showGrading ? (
-                <GradingView grading={result.grading} />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowGrading(true)}
-                  className="min-h-12 w-full rounded-lg bg-amber-600 px-4 font-semibold hover:bg-amber-500"
-                >
-                  정답 보기
-                </button>
-              )}
-            </section>
-          )}
-        </>
-      )}
+          {/* 결과 공개 */}
+          {pickSection}
 
-      {/* 새 수사 */}
-      <Link
-        to="/"
-        className="mt-8 flex min-h-12 items-center justify-center rounded-lg bg-slate-700 px-4 font-semibold hover:bg-slate-600"
-      >
-        새 수사
-      </Link>
+          {/* 새 수사 */}
+          <Link
+            to="/"
+            className="flex min-h-12 items-center justify-center rounded-lg bg-slate-700 px-4 font-semibold hover:bg-slate-600"
+          >
+            새 수사
+          </Link>
+        </div>
+      </div>
     </PageContainer>
   );
 }

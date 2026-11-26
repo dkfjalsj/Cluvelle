@@ -1,0 +1,29 @@
+import type { TimelineStep } from "./TimelineItem";
+
+// 가설 기록 속성
+interface HypothesisLogProps {
+  // 공개된 단계 (순번 오름차순)
+  steps: TimelineStep[];
+}
+
+// 가설 기록
+// 공개된 단계 중 가설이 바뀐 단계를 "n단계 · 가설" 형식으로 순서대로 보여 주는 컴포넌트 (없으면 그리지 않음)
+export function HypothesisLog({ steps }: HypothesisLogProps) {
+  // 가설이 바뀐 단계만
+  const entries = steps.filter((item) => item.hypothesis);
+  if (entries.length === 0) return null;
+  return (
+    <section>
+      {/* 제목 */}
+      <h2 className="text-lg font-semibold">가설 기록</h2>
+      {/* 단계별 가설 */}
+      <ol className="mt-2 space-y-1 text-sm text-amber-200">
+        {entries.map((item) => (
+          <li key={item.step}>
+            {item.step}단계 · {item.hypothesis}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}

@@ -77,7 +77,7 @@ function describeTarget(
 }
 
 // 타임라인 항목
-// 한 단계의 도구·대상·선택 사유·바뀐 가설·결과(또는 조사 중)를 보여 주는 컴포넌트
+// 한 단계의 도구·대상·고른 이유·그때의 가설·결과(또는 조사 중)를 보여 주는 컴포넌트
 export function TimelineItem({ item, publicCase }: TimelineItemProps) {
   // 도구 이름과 결과
   const tool = item.selected?.tool ?? item.found?.tool ?? "";
@@ -93,14 +93,16 @@ export function TimelineItem({ item, publicCase }: TimelineItemProps) {
           {describeTarget(tool, item.selected.args, publicCase)}
         </p>
       )}
-      {/* 선택 사유 */}
+      {/* 이 조사를 고른 이유 */}
       {item.selected?.reason && (
-        <p className="mt-1 text-slate-400">사유: {item.selected.reason}</p>
+        <p className="mt-1 text-slate-400">
+          이 조사를 고른 이유: {item.selected.reason}
+        </p>
       )}
-      {/* 바뀐 가설 */}
-      {item.hypothesis && (
-        <p className="mt-1 text-amber-300">가설 변경: {item.hypothesis}</p>
-      )}
+      {/* 이때의 가설 (바뀌지 않았으면 가설 변화 없음) */}
+      <p className="mt-1 text-amber-300">
+        이때의 가설: {item.hypothesis ?? "가설 변화 없음"}
+      </p>
       {/* 결과 */}
       <div className="mt-2">
         {!found && <p className="text-slate-400">조사 중...</p>}

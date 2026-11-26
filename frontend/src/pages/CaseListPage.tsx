@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { CaseCard } from "../components/CaseCard";
 import { PageContainer } from "../components/PageContainer";
+import { CaseListSkeleton } from "../components/Skeletons";
 import { useDelayedFlag } from "../hooks/useDelayedFlag";
 import { fetchCases } from "../services/api";
 import type { CaseListItem } from "../types/api";
@@ -70,13 +71,12 @@ export function CaseListPage() {
 
   return (
     <PageContainer>
-      {/* 앱 이름과 안내 */}
-      <h1 className="text-2xl font-bold">Cluvelle</h1>
-      <p className="mt-1 text-sm text-slate-400">
+      {/* 안내 문장 (앱 이름은 머리글에 표시) */}
+      <p className="text-sm text-slate-400">
         사건을 고르면 AI 탐정이 조사를 시작해요.
       </p>
 
-      {/* 로딩 중 안내 */}
+      {/* 로딩 중 안내와 스켈레톤 */}
       {loading && (
         <div className="mt-6 text-sm text-slate-300">
           <p>사건 목록을 불러오는 중...</p>
@@ -85,6 +85,9 @@ export function CaseListPage() {
               서버를 깨우는 중이에요. 최대 1분쯤 걸릴 수 있어요.
             </p>
           )}
+          <div className="mt-4">
+            <CaseListSkeleton />
+          </div>
         </div>
       )}
 
@@ -104,7 +107,7 @@ export function CaseListPage() {
 
       {/* 사건 카드 목록 */}
       {!loading && !error && cases && (
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-6 grid gap-3 lg:grid-cols-2">
           {cases.map((item) => (
             <li key={item.case_id}>
               <CaseCard item={item} />

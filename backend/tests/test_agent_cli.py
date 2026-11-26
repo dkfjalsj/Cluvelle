@@ -111,7 +111,7 @@ def test_cli_runs_with_fake_model(
     # 머리말 확인
     assert "사건: CASE-001" in output
     assert "방식: adaptive" in output
-    assert "프롬프트 버전: adaptive-v3" in output
+    assert "프롬프트 버전: adaptive-v4" in output
     assert "조사 예산: 10회" in output
     # 도구 블록 확인
     assert '[1/10] inspect_scene {"location_id": "L1"}' in output
