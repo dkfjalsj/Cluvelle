@@ -47,8 +47,8 @@ def get_model_factory() -> ModelFactory:
 # 프로세스 하나에서 공유하는 수사 실행 저장소를 반환하는 함수
 @lru_cache
 def get_run_store() -> InvestigationRunStore:
-    # 기본 설정의 저장소 생성
-    return InvestigationRunStore()
+    # 웹 수사는 예산을 모두 쓰도록 재촉하는 저장소 생성
+    return InvestigationRunStore(use_full_budget=True)
 
 
 # 실행 제한기 의존성
