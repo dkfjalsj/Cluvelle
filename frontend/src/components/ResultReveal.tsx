@@ -3,6 +3,7 @@ import type { InvestigationResult, PublicCase } from "../types/api";
 import { UNKNOWN_PICK, type SuspectPick } from "../types/progress";
 import { GradingView } from "./GradingView";
 import { ReportView } from "./ReportView";
+import { ResultMessage } from "./ResultMessage";
 
 // 결과 공개 속성
 interface ResultRevealProps {
@@ -61,16 +62,19 @@ export function ResultReveal({
   const culprit = grading
     ? `${grading.culprit_id} ${grading.culprit_name}`
     : "";
-  // 내 결과 문구
-  const myResult =
-    pick === UNKNOWN_PICK
-      ? '"모르겠어요"를 선택했어요'
-      : grading && pick === grading.culprit_id
-        ? "맞혔어요"
-        : "틀렸어요";
 
   return (
     <div className="space-y-4">
+      {/* 결과 메시지 카드 (맨 위) */}
+      {grading && (
+        <ResultMessage
+          pick={pick}
+          pickedAtStep={pickedAtStep}
+          culpritId={grading.culprit_id}
+          culpritName={grading.culprit_name}
+          aiVerdict={grading.verdict}
+        />
+      )}
       {/* 비교 카드 3칸 */}
       <div className="grid gap-2 sm:grid-cols-3">
         <CompareCell
@@ -81,8 +85,6 @@ export function ResultReveal({
         <CompareCell title="AI의 결론" value={aiConclusion} />
         <CompareCell title="실제 범인" value={culprit} />
       </div>
-      {/* 내 결과 */}
-      <p className="text-lg font-bold text-amber-300">{myResult}</p>
       {/* AI 채점 판정 */}
       {grading && (
         <p className="text-sm text-slate-200">

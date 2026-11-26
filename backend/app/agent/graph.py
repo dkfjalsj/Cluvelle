@@ -1,7 +1,7 @@
 from typing import Any
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
@@ -24,11 +24,26 @@ __all__ = ["TOOL_FUNCTIONS", "build_investigation_graph"]
 # 노드 이름
 INVESTIGATOR_NODE = "investigator"
 TOOL_EXECUTOR_NODE = "tool_executor"
+# 연속 재촉 최대 횟수 (예산 모두 사용 모드)
+MAX_NUDGE_STREAK = 3
+
+
+# 재촉 문구 생성
+# 남은 예산 횟수를 넣어 조사를 더 하라고 재촉하는 문구를 만드는 함수
+def build_nudge_message(remaining: int) -> str:
+    # 재촉 문구 반환
+    return (
+        f"아직 조사 예산이 {remaining}회 남았다. 결론을 내리기 전에 아직 확인하지 않은 조사를 "
+        "더 하라. 이미 한 조사를 반복하면 예산만 쓰인다."
+    )
 
 
 # 적응형 수사 그래프 생성
 # LLM과 사건을 받아 조사 반복·최종 보고서 작성·서버 검증까지 하는 LangGraph 그래프를 컴파일해 반환하는 함수
-def build_investigation_graph(llm: BaseChatModel, case: CaseFile) -> CompiledStateGraph:
+# use_full_budget이 True면 예산이 남았는데 끝내려 할 때 최대 연속 3회까지 조사를 더 하라고 재촉한다
+def build_investigation_graph(
+    llm: BaseChatModel, case: CaseFile, use_full_budget: bool = False
+) -> CompiledStateGraph:
     # 도구 명세를 묶은 LLM
     llm_with_tools = llm.bind_tools(get_llm_tools())
 
@@ -48,9 +63,22 @@ def build_investigation_graph(llm: BaseChatModel, case: CaseFile) -> CompiledSta
         # AIMessage가 아니면 AIMessage로 감싸기
         if not isinstance(response, AIMessage):
             response = AIMessage(content=response.content)
-        # 도구 호출이 있으면 메시지만 추가
+        # 도구 호출이 있으면 메시지 추가 (예산 모두 사용 모드면 연속 재촉 횟수 초기화)
         if response.tool_calls:
+            if use_full_budget:
+                return {"messages": [response], "nudge_streak": 0}
             return {"messages": [response]}
+        # 예산 모두 사용 모드: 예산이 남았고 연속 재촉이 상한 미만이면 재촉 후 수사관으로 되돌림
+        remaining = case.tool_budget - state["tool_call_count"]
+        streak = state.get("nudge_streak", 0)
+        if use_full_budget and remaining >= 1 and streak < MAX_NUDGE_STREAK:
+            return {
+                "messages": [
+                    response,
+                    HumanMessage(content=build_nudge_message(remaining)),
+                ],
+                "nudge_streak": streak + 1,
+            }
         # 도구 호출이 없으면 수사 종료 (보고서 작성으로 이동)
         return {"messages": [response], "stop_reason": "finished"}
 
@@ -102,6 +130,9 @@ def build_investigation_graph(llm: BaseChatModel, case: CaseFile) -> CompiledSta
         # 수사 종료면 보고서 작성
         if state["stop_reason"] == "finished":
             return REPORT_NODE
+        # 재촉 메시지를 넣었으면 수사관으로 되돌림
+        if isinstance(state["messages"][-1], HumanMessage):
+            return INVESTIGATOR_NODE
         # 그 외(도구 호출 있음)는 도구 실행
         return TOOL_EXECUTOR_NODE
 
@@ -122,11 +153,11 @@ def build_investigation_graph(llm: BaseChatModel, case: CaseFile) -> CompiledSta
     graph.add_node(REPORT_VALIDATOR_NODE, make_report_validator(case))
     # 시작 → 수사관
     graph.add_edge(START, INVESTIGATOR_NODE)
-    # 수사관 → 도구 실행 / 보고서 / 종료
+    # 수사관 → 도구 실행 / 보고서 / 수사관(재촉) / 종료
     graph.add_conditional_edges(
         INVESTIGATOR_NODE,
         route_after_investigator,
-        [TOOL_EXECUTOR_NODE, REPORT_NODE, END],
+        [TOOL_EXECUTOR_NODE, REPORT_NODE, INVESTIGATOR_NODE, END],
     )
     # 도구 실행 → 수사관 / 보고서
     graph.add_conditional_edges(

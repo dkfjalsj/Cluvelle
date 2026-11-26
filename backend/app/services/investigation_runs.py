@@ -73,7 +73,10 @@ class InvestigationRunStore:
         retention: timedelta = DEFAULT_RETENTION,
         max_runs: int = DEFAULT_MAX_RUNS,
         runner: StreamRunner = run_investigation_stream,
+        use_full_budget: bool = False,
     ) -> None:
+        # 수사를 예산을 모두 쓰도록 실행할지 여부
+        self.use_full_budget = use_full_budget
         # 현재 시각 함수 (테스트에서 주입)
         self.now = now
         # 보관 기간과 최대 건수
@@ -170,6 +173,7 @@ class InvestigationRunStore:
                 llm,
                 on_event=lambda event: self._append_event(run, event),
                 on_state=lambda state: setattr(run, "state", state),
+                use_full_budget=self.use_full_budget,
             )
         except InvestigationStreamError as error:
             # 그래프 예외: 마지막 상태와 사용자용 문장 보관

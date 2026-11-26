@@ -44,6 +44,7 @@ def run_investigation(
     llm: BaseChatModel,
     mode: InvestigationMode = "adaptive",
     repository: CaseRepository | None = None,
+    use_full_budget: bool = False,
 ) -> InvestigationState:
     # 저장소가 없으면 기본 경로 저장소 사용
     repository = repository or CaseRepository()
@@ -51,20 +52,22 @@ def run_investigation(
     case = repository.load_case(case_id)
     public_case = repository.get_public_case(case_id)
 
-    # 방식별 그래프와 첫 메시지
+    # 방식별 그래프와 첫 메시지 (예산 모두 사용 옵션은 적응형에만 적용)
+    full_budget = use_full_budget and mode == "adaptive"
     if mode == "fixed":
         # 고정 계획형은 planner가 시스템 프롬프트·브리핑을 직접 구성하므로 비워 둠
         graph = build_fixed_graph(llm, case)
         initial_state = build_initial_state(case, mode, [])
     else:
         # 적응형은 시스템 프롬프트 + 사건 브리핑으로 시작
-        graph = build_investigation_graph(llm, case)
+        graph = build_investigation_graph(llm, case, use_full_budget=full_budget)
         initial_state = build_initial_state(
             case, mode, adaptive_initial_messages(public_case)
         )
     # 그래프 실행 후 최종 상태 반환
     result = graph.invoke(
-        initial_state, config={"recursion_limit": _recursion_limit(case)}
+        initial_state,
+        config={"recursion_limit": _recursion_limit(case, full_budget)},
     )
     return cast(InvestigationState, result)
 
@@ -78,6 +81,7 @@ def run_investigation_stream(
     on_event: EventCallback,
     repository: CaseRepository | None = None,
     on_state: StateCallback | None = None,
+    use_full_budget: bool = False,
 ) -> InvestigationState:
     # 저장소가 없으면 기본 경로 저장소 사용
     repository = repository or CaseRepository()
@@ -85,7 +89,7 @@ def run_investigation_stream(
     case = repository.load_case(case_id)
     public_case = repository.get_public_case(case_id)
     # 적응형 그래프와 초기 상태 (run_investigation과 동일)
-    graph = build_investigation_graph(llm, case)
+    graph = build_investigation_graph(llm, case, use_full_budget=use_full_budget)
     initial_state = build_initial_state(
         case, "adaptive", adaptive_initial_messages(public_case)
     )
@@ -97,7 +101,7 @@ def run_investigation_stream(
     try:
         for mode, chunk in graph.stream(
             initial_state,
-            config={"recursion_limit": _recursion_limit(case)},
+            config={"recursion_limit": _recursion_limit(case, use_full_budget)},
             stream_mode=["updates", "values"],
         ):
             if mode == "values":
@@ -147,6 +151,7 @@ def build_initial_state(
         "status": "running",
         "stop_reason": None,
         "plan": None,
+        "nudge_streak": 0,
         "pending_report": None,
         "final_report": None,
         "report_status": None,
@@ -157,8 +162,15 @@ def build_initial_state(
 
 
 # 반복 한도 계산
-# 사건 예산으로 그래프 반복 한도를 계산하는 함수
-def _recursion_limit(case: CaseFile) -> int:
-    # 예산 × 2(수사관·도구 실행) + 마지막 수사관 1 + 보고서·검증 2회씩 4 + 여유 5
+# 사건 예산과 예산 모두 사용 여부로 그래프 반복 한도를 계산하는 함수
+def _recursion_limit(case: CaseFile, use_full_budget: bool = False) -> int:
+    # 예산 모두 사용 모드:
+    #   도구 호출 수사관 예산 B + 도구 실행 B
+    #   + 재촉된 수사관 최대 3 × (B + 1) (도구 호출 사이마다 연속 3회까지 가능)
+    #   + 마지막 수사관 1 + 보고서·검증 2회씩 4 + 여유 5
+    #   = B × 5 + 13 (예산 10이면 63)
+    if use_full_budget:
+        return case.tool_budget * 5 + 13
+    # 기본: 예산 × 2(수사관·도구 실행) + 마지막 수사관 1 + 보고서·검증 2회씩 4 + 여유 5
     # (고정 계획형은 계획 1 + 실행 1 + 보고서·검증 4로 이보다 훨씬 적음)
     return case.tool_budget * 2 + 10

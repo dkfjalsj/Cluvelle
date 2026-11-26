@@ -80,6 +80,8 @@ class InvestigationState(TypedDict):
     )
     # 고정 계획형 조사 계획 (적응형은 None)
     plan: InvestigationPlan | None
+    # 연속 재촉 횟수 (적응형 예산 모두 사용 모드에서만 쓰임)
+    nudge_streak: int
     # 검증 대기 보고서
     pending_report: FinalReport | None
     # 최종 보고서 (검증 통과 또는 강제 판단 보류 후 저장)
